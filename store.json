@@ -1,121 +1,61 @@
 {
-  "ingredients": [
-    {
-      "id": "matcha",
-      "name": "Matcha",
-      "qty": "5 g"
-    },
-    {
-      "id": "water",
-      "name": "Eau chaude",
-      "qty": "30 ml"
-    },
-    {
-      "id": "ice",
-      "name": "Glaçon",
-      "qty": "1 cubes"
-    },
-    {
-      "id": "milk",
-      "name": "Lait d'avoine",
-      "qty": "200 ml"
-    }
-  ],
   "drinks": [
     {
-      "id": "iced-latte",
-      "name": "Iced matcha latte",
-      "emoji": "🧊",
-      "description": "Un matcha glacé rafraîchissant",
-      "keywords": ["iced", "glacé", "latte", "froid", "glaçon"],
-      "steps": [
-        {
-          "id": "matcha",
-          "text": "Tamiser 6g de matcha",
-          "duration": "30s"
-        },
-        {
-          "id": "water",
-          "text": "Ajouter 30ml eau chaude",
-          "duration": "10s"
-        },
-        {
-          "id": "whisk",
-          "text": "Fouetter en W jusqu'à mousser",
-          "duration": "45s"
-        },
-        {
-          "id": "ice",
-          "text": "Ajouter les glaçons",
-          "duration": "15s"
-        },
-        {
-          "id": "milk",
-          "text": "Verser 200ml lait d'avoine",
-          "duration": "20s"
-        }
-      ]
+        "id": "iced-latte",
+        "name": "Iced matcha latte",
+        "emoji": "🧊",
+        "description": "Un matcha glacé rafraîchissant",
+        "keywords": ["iced", "glacé", "latte", "froid", "glaçon"],
+        "ingredients": [
+            { "id": "matcha", "name": "Matcha", "qty": "5 g" },
+            { "id": "water", "name": "Eau chaude", "qty": "30 ml" },
+            { "id": "ice", "name": "Glaçon", "qty": "1 cubes" },
+            { "id": "milk", "name": "Lait d'avoine", "qty": "200 ml" }
+        ],
+        "steps": [
+            { "id": "matcha", "text": "Tamiser 6g de matcha", "duration": "30s" },
+            { "id": "water", "text": "Ajouter 30ml eau chaude", "duration": "10s" },
+            { "id": "whisk", "text": "Fouetter en W jusqu'à mousser", "duration": "45s" },
+            { "id": "ice", "text": "Ajouter les glaçons", "duration": "15s" },
+            { "id": "milk", "text": "Verser 200ml lait d'avoine", "duration": "20s" },
+            { "id": "pour", "text": "Verser dans une tasse", "duration": "10s" }
+        ]
     },
     {
-      "id": "hot-latte",
-      "name": "Hot matcha latte",
-      "emoji": "☕",
-      "description": "Un matcha chaud et réconfortant",
-      "keywords": ["hot", "chaud", "latte", "warm", "tiède"],
-      "steps": [
-        {
-          "id": "matcha",
-          "text": "Tamiser 6g de matcha",
-          "duration": "30s"
-        },
-        { "id": "water", "text": "Ajouter 30ml eau chaude", "duration": "10s" },
-        {
-          "id": "whisk",
-          "text": "Fouetter en W jusqu'à mousser",
-          "duration": "45s"
-        },
-        {
-          "id": "milk",
-          "text": "Verser 200ml lait d'avoine",
-          "duration": "20s"
-        }
-      ]
+        "id": "hot-latte",
+        "name": "Hot matcha latte",
+        "emoji": "☕",
+        "description": "Un matcha chaud et réconfortant",
+        "keywords": ["hot", "chaud", "latte", "warm", "tiède"],
+        "ingredients": [
+            { "id": "matcha", "name": "Matcha", "qty": "5 g" },
+            { "id": "water", "name": "Eau chaude", "qty": "30 ml" },
+            { "id": "milk", "name": "Lait d'avoine", "qty": "200 ml" }
+        ],
+        "steps": [
+            { "id": "matcha", "text": "Tamiser 6g de matcha", "duration": "30s" },
+            { "id": "water", "text": "Ajouter 30ml eau chaude", "duration": "10s" },
+            { "id": "whisk", "text": "Fouetter en W jusqu'à mousser", "duration": "45s" },
+            { "id": "milk", "text": "Verser 200ml lait d'avoine", "duration": "20s" },
+            { "id": "pour", "text": "Verser dans une tasse", "duration": "10s" }
+]
     },
     {
-      "id": "ceremonial",
-      "name": "Ceremonial",
-      "emoji": "🍵",
-      "description": "La cérémonie du matcha traditionnelle",
-      "keywords": [
-        "ceremoni",
-        "cérémonie",
-        "traditionnel",
-        "matcha pur",
-        "cérémonial"
-      ],
-      "steps": [
-        {
-          "id": "matcha",
-          "text": "Tamiser 10g de matcha",
-          "duration": "45s"
-        },
-        {
-          "id": "water",
-
-          "text": "Ajouter 70ml eau à 70°C",
-          "duration": "15s"
-        },
-        {
-          "id": "whisk",
-          "text": "Fouetter minutieusement",
-          "duration": "90s"
-        },
-        {
-          "id": "pour",
-          "text": "Verser dans une tasse",
-          "duration": "10s"
-        }
-      ]
+        "id": "ceremonial",
+        "name": "Ceremonial",
+        "emoji": "🍵",
+        "description": "La cérémonie du matcha traditionnelle",
+        "keywords": [ "ceremoni", "cérémonie", "cérémonial" ],
+        "ingredients": [
+            { "id": "matcha", "name": "Matcha", "qty": "5 g" },
+            { "id": "water", "name": "Eau chaude", "qty": "30 ml" }
+        ],
+        "steps": [
+            { "id": "matcha", "text": "Tamiser 10g de matcha", "duration": "45s" },
+            { "id": "water", "text": "Ajouter 70ml eau à 70°C", "duration": "15s" },
+            { "id": "whisk", "text": "Fouetter minutieusement", "duration": "90s" },
+            { "id": "pour", "text": "Verser dans une tasse", "duration": "10s" }
+        ]
     }
   ]
 }
