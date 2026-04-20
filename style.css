@@ -1,0 +1,580 @@
+:root {
+  --wood: #e8dfd0;
+  --wood-dark: #d4c9b5;
+  --wood-grain: #c8b89a;
+  --panel-bg: #f0eae0;
+  --border: #d0c4b0;
+
+  --matcha: #5c8a4a;
+  --matcha-mid: #7ab060;
+  --matcha-pale: #c8dfb8;
+
+  --ink: #2a2420;
+  --ink-mid: #5a5048;
+  --ink-light: #9a8e80;
+
+  --done-bg: #eaf3e4;
+  --done-border: #b0c8a0;
+
+  font-family: "DM Sans", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--wood);
+  color: var(--ink);
+}
+
+#webcam,
+#output {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#cursor {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition:
+    left 0.04s linear,
+    top 0.04s linear;
+}
+#cursor-ring {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--matcha);
+  border-radius: 50%;
+  opacity: 0.6;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+#cursor-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--matcha);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+#cursor.pinching #cursor-ring {
+  transform: scale(0.5);
+  opacity: 1;
+  border-color: var(--matcha);
+  background: var(--matcha-pale);
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 240px 1fr 200px;
+  grid-template-rows: 100vh;
+  height: 100vh;
+}
+
+aside {
+  background: var(--panel-bg);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+#panel-ingredients {
+  border-right: none;
+  border-left: 1px solid var(--border);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.kanji {
+  font-family: "Shippori Mincho", serif;
+  font-size: 28px;
+  color: var(--matcha);
+  line-height: 1;
+}
+h1 {
+  font-family: "Shippori Mincho", serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  margin-bottom: 10px;
+}
+
+.recipe-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.chip {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  color: var(--ink-mid);
+  cursor: default;
+  text-align: left;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+.chip.active {
+  background: var(--matcha);
+  border-color: var(--matcha);
+  color: #fff;
+  font-weight: 500;
+}
+
+#steps-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: transparent;
+  transition: background 0.3s;
+}
+.step.done {
+  background: var(--done-bg);
+}
+.step.active {
+  background: #fff;
+  border: 1px solid var(--matcha-pale);
+}
+.step-check {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  margin-top: 1px;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+  position: relative;
+}
+.step.done .step-check {
+  background: var(--matcha);
+  border-color: var(--matcha);
+}
+.step.done .step-check::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 6px;
+  height: 4px;
+  border-left: 1.5px solid #fff;
+  border-bottom: 1.5px solid #fff;
+  transform: rotate(-45deg);
+}
+.step.active .step-check {
+  border-color: var(--matcha);
+  animation: pulse-check 1.5s ease-in-out infinite;
+}
+@keyframes pulse-check {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(92, 138, 74, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(92, 138, 74, 0);
+  }
+}
+.step-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-mid);
+}
+.step.done .step-text {
+  color: var(--ink-light);
+  text-decoration: line-through;
+}
+.step.active .step-text {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+#mic-status {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--wood-dark);
+  border-radius: 8px;
+}
+.mic-icon {
+  color: var(--matcha);
+  display: flex;
+  align-items: center;
+}
+#mic-label {
+  font-size: 11px;
+  color: var(--ink-mid);
+}
+.mic-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--matcha);
+  border-radius: 50%;
+  animation: blink 1.4s ease-in-out infinite;
+}
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+#workspace {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--wood);
+  overflow: hidden;
+}
+
+.wood-grain {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      92deg,
+      transparent,
+      transparent 40px,
+      rgba(180, 160, 130, 0.06) 40px,
+      rgba(180, 160, 130, 0.06) 41px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      transparent,
+      transparent 80px,
+      rgba(160, 140, 110, 0.04) 80px,
+      rgba(160, 140, 110, 0.04) 81px
+    );
+  pointer-events: none;
+}
+
+#workspace-label {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--wood-grain);
+  font-weight: 500;
+}
+
+#bowl-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+#bowl {
+  width: 140px;
+  height: 90px;
+  border-radius: 0 0 70px 70px;
+  background: #ddd6ca;
+  border: 2px solid #b8b0a4;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+#bowl::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: -10px;
+  right: -10px;
+  height: 16px;
+  background: #c8c0b4;
+  border-radius: 6px 6px 0 0;
+}
+#bowl-liquid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: #4a7c35;
+  border-radius: 0 0 68px 68px;
+  transition: height 0.6s ease;
+}
+#bowl-foam {
+  position: absolute;
+  bottom: 36px;
+  left: 14px;
+  right: 14px;
+  height: 10px;
+  background: #7ab060;
+  border-radius: 6px;
+  opacity: 0.7;
+  transition: bottom 0.6s ease;
+}
+
+#bowl-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wood-grain);
+}
+
+#whisk-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+#whisk-gauge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#whisk-gauge-bar {
+  width: 100px;
+  height: 5px;
+  background: var(--wood-dark);
+  border-radius: 3px;
+  overflow: hidden;
+}
+#whisk-gauge-fill {
+  height: 100%;
+  background: var(--matcha);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+#whisk-gauge-label {
+  font-size: 11px;
+  color: var(--ink-light);
+  min-width: 32px;
+}
+
+#panel-ingredients {
+  gap: 16px;
+}
+#ingredients-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ingredient {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: default;
+  transition:
+    opacity 0.3s,
+    border-color 0.3s;
+  user-select: none;
+}
+.ingredient.used {
+  background: var(--done-bg);
+  border-color: var(--done-border);
+  opacity: 0.6;
+}
+.ingredient.grabbed {
+  opacity: 0.3;
+}
+
+/* Visuels ingrédients */
+.ingredient-visual {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.matcha-visual {
+  background: #5c8a4a;
+}
+.water-visual {
+  background: #a8cede;
+}
+.ice-visual {
+  background: #d8eef8;
+  border: 1.5px solid #a8cce0;
+}
+.milk-visual {
+  background: #f5f0e8;
+  border: 1.5px solid #e0d8c8;
+}
+
+.ingredient-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.ingredient-qty {
+  font-size: 11px;
+  color: var(--ink-light);
+}
+.ingredient-used-badge {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--matcha);
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.ingredient.used .ingredient-used-badge {
+  opacity: 1;
+}
+
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 999;
+  transform: translate(-50%, -50%);
+}
+.drag-ghost.hidden {
+  display: none;
+}
+.drag-ghost-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--matcha);
+  opacity: 0.8;
+  border: 2px solid #fff;
+}
+
+#finish-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 36, 32, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+#finish-overlay.hidden {
+  display: none;
+}
+
+#finish-card {
+  background: var(--panel-bg);
+  border-radius: 16px;
+  padding: 40px 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  position: relative;
+  z-index: 2;
+}
+.finish-emoji {
+  margin-bottom: 4px;
+}
+#finish-card h2 {
+  font-family: "Shippori Mincho", serif;
+  font-size: 28px;
+  color: var(--ink);
+}
+#finish-card p {
+  font-size: 14px;
+  color: var(--ink-mid);
+}
+#finish-reset {
+  margin-top: 12px;
+  padding: 10px 24px;
+  background: var(--matcha);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+#finish-reset:hover {
+  background: #4a7a3a;
+}
+
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+#bowl.drop-hover {
+  border-color: var(--matcha);
+  box-shadow: 0 0 0 3px var(--matcha-pale);
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+#whisk-zone {
+  opacity: 0.4;
+  transition: opacity 0.4s ease;
+}
+#whisk-zone.whisk-ready {
+  opacity: 1;
+}
+#whisk-zone.whisk-ready #whisk-gauge-bar {
+  border: 1px solid var(--matcha-pale);
+}
+
+.hidden {
+  display: none !important;
+}

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Matcha Bar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Webcam caché (requis par hand-tracking.js) -->
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id="output"></canvas>
+
+    <!-- Curseur gestuel -->
+    <div id="cursor">
+      <div id="cursor-ring"></div>
+      <div id="cursor-dot"></div>
+    </div>
+
+    <!-- Layout principal -->
+    <div id="app">
+      <!-- COLONNE GAUCHE : Recette en cours -->
+      <aside id="panel-recipe">
+        <div class="panel-header">
+          <span class="kanji">抹茶</span>
+          <h1>Matcha Bar</h1>
+        </div>
+
+        <div id="recipe-selector">
+          <p class="label">dire le nom d'une recette</p>
+          <div class="recipe-chips">
+            <button class="chip active" data-recipe="iced-latte">
+              Iced matcha latte
+            </button>
+            <button class="chip" data-recipe="hot-latte">Latte chaud</button>
+            <button class="chip" data-recipe="ceremonial">Ceremonial</button>
+          </div>
+        </div>
+
+        <div id="recipe-steps">
+          <p class="label">étapes</p>
+          <ol id="steps-list">
+            <li class="step done">
+              <span class="step-check"></span>
+              <span class="step-text">Tamiser 2g de matcha</span>
+            </li>
+            <li class="step done">
+              <span class="step-check"></span>
+              <span class="step-text">Ajouter 30ml eau chaude</span>
+            </li>
+            <li class="step active">
+              <span class="step-check"></span>
+              <span class="step-text">Fouetter en W jusqu'à mousser</span>
+            </li>
+            <li class="step">
+              <span class="step-check"></span>
+              <span class="step-text">Ajouter les glaçons</span>
+            </li>
+            <li class="step">
+              <span class="step-check"></span>
+              <span class="step-text">Verser 200ml lait d'avoine</span>
+            </li>
+          </ol>
+        </div>
+
+        <!-- Mic status -->
+        <div id="mic-status">
+          <div class="mic-icon">
+            <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
+              <rect
+                x="4"
+                y="0"
+                width="6"
+                height="9"
+                rx="3"
+                fill="currentColor"
+              />
+              <path
+                d="M1 8a6 6 0 0 0 12 0"
+                stroke="currentColor"
+                stroke-width="1.5"
+                fill="none"
+                stroke-linecap="round"
+              />
+              <line
+                x1="7"
+                y1="14"
+                x2="7"
+                y2="16"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <span id="mic-label">en écoute…</span>
+        </div>
+      </aside>
+
+      <!-- ZONE CENTRALE : Plan de travail -->
+      <main id="workspace">
+        <!-- Grain texture overlay -->
+        <div class="wood-grain"></div>
+
+        <!-- Label plan de travail -->
+        <div id="workspace-label">plan de travail</div>
+
+        <!-- BOL central -->
+        <div id="bowl-container">
+          <div id="bowl">
+            <div id="bowl-liquid"></div>
+            <div id="bowl-foam"></div>
+          </div>
+          <div id="bowl-label">bol de préparation</div>
+
+          <!-- Zone de fouettage (autour du bol) -->
+          <div id="whisk-zone">
+            <svg
+              id="whisk-path-svg"
+              width="120"
+              height="40"
+              viewBox="0 0 120 40"
+            >
+              <path
+                d="M5 5 L25 35 L45 5 L65 35 L85 5 L105 35 L115 20"
+                fill="none"
+                stroke="#C8B89A"
+                stroke-width="1.5"
+                stroke-dasharray="5 4"
+                stroke-linecap="round"
+              />
+              <!-- Points du tracé -->
+              <circle
+                cx="5"
+                cy="5"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+              <circle
+                cx="25"
+                cy="35"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+              <circle
+                cx="45"
+                cy="5"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+              <circle
+                cx="65"
+                cy="35"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+              <circle
+                cx="85"
+                cy="5"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+              <circle
+                cx="105"
+                cy="35"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+            </svg>
+            <div id="whisk-gauge-wrap">
+              <div id="whisk-gauge-bar">
+                <div id="whisk-gauge-fill" style="width: 55%"></div>
+              </div>
+              <span id="whisk-gauge-label">55%</span>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- COLONNE DROITE : Ingrédients -->
+      <aside id="panel-ingredients">
+        <p class="label">ingrédients</p>
+
+        <div id="ingredients-grid">
+          <div class="ingredient used" data-id="matcha" id="ingr-matcha">
+            <div class="ingredient-visual matcha-visual"></div>
+            <div class="ingredient-name">Matcha</div>
+            <div class="ingredient-qty">2 g</div>
+            <div class="ingredient-used-badge">ajouté</div>
+          </div>
+
+          <div class="ingredient used" data-id="water" id="ingr-water">
+            <div class="ingredient-visual water-visual"></div>
+            <div class="ingredient-name">Eau chaude</div>
+            <div class="ingredient-qty">30 ml</div>
+            <div class="ingredient-used-badge">ajouté</div>
+          </div>
+
+          <div class="ingredient" data-id="ice" id="ingr-ice">
+            <div class="ingredient-visual ice-visual"></div>
+            <div class="ingredient-name">Glaçons</div>
+            <div class="ingredient-qty">6 cubes</div>
+            <div class="ingredient-used-badge">ajouté</div>
+          </div>
+
+          <div class="ingredient" data-id="milk" id="ingr-milk">
+            <div class="ingredient-visual milk-visual"></div>
+            <div class="ingredient-name">Lait d'avoine</div>
+            <div class="ingredient-qty">200 ml</div>
+            <div class="ingredient-used-badge">ajouté</div>
+          </div>
+        </div>
+
+        <!-- Ghost d'ingrédient en cours de drag -->
+        <div id="drag-ghost" class="drag-ghost hidden">
+          <div class="drag-ghost-circle"></div>
+        </div>
+      </aside>
+    </div>
+    <!-- #app -->
+
+    <!-- Overlay de fin (confettis + message) -->
+    <div id="finish-overlay" class="hidden">
+      <div id="finish-card">
+        <div class="finish-emoji">
+          <svg width="48" height="48" viewBox="0 0 48 48">
+            <circle cx="24" cy="32" r="14" fill="#5C8A4A" />
+            <ellipse cx="24" cy="18" rx="10" ry="6" fill="#7AB060" />
+            <ellipse cx="24" cy="16" rx="7" ry="4" fill="#9EC87A" />
+          </svg>
+        </div>
+        <h2>Parfait !</h2>
+        <p>Votre iced matcha latte est prêt.</p>
+        <button id="finish-reset">Nouvelle recette</button>
+      </div>
+      <canvas id="confetti-canvas"></canvas>
+    </div>
+
+    <!-- Scripts MediaPipe (fournis par le prof) -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="hand-tracking.js"></script>
+
+    <!-- Nos modules -->
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
