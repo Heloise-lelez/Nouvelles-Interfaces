@@ -1,28 +1,27 @@
 const video = document.getElementById("webcam");
 
 let handCallback = () => {};
-
 window.onHandUpdate = function (cb) {
   handCallback = cb;
 };
 
 async function init() {
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: true
+    video: true,
   });
 
   video.srcObject = stream;
 
   const hands = new Hands({
     locateFile: (file) =>
-      `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+      `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
   });
 
   hands.setOptions({
     maxNumHands: 1,
     modelComplexity: 0,
     minDetectionConfidence: 0.7,
-    minTrackingConfidence: 0.7
+    minTrackingConfidence: 0.7,
   });
 
   hands.onResults((results) => {
@@ -43,7 +42,8 @@ async function init() {
     handCallback({
       x: index.x,
       y: index.y,
-      isPinching
+      isPinching,
+      landmarks: landmarks,
     });
   });
 
@@ -52,7 +52,7 @@ async function init() {
       await hands.send({ image: video });
     },
     width: 640,
-    height: 480
+    height: 480,
   });
 
   camera.start();
