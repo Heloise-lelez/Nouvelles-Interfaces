@@ -18,7 +18,6 @@
 
   font-family: "DM Sans", sans-serif;
 
-
   --dx: 12px;
   --dy: -8px;
   --rot: 6deg;
@@ -552,7 +551,7 @@ h1 {
   padding: 10px;
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 5px;
   cursor: default;
   transition:
     opacity 0.3s,
@@ -869,8 +868,8 @@ h1 {
   position: relative;
   overflow: hidden;
   box-shadow:
-    inset 0 2px 4px rgba(255,255,255,0.3),
-    inset 0 -2px 4px rgba(0,0,0,0.08);
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.08);
 }
 
 /* Vitre de la porte — occupe la majorité du corps */
@@ -894,7 +893,7 @@ h1 {
   left: 7px;
   width: 28px;
   height: 6px;
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 3px;
 }
 
@@ -918,8 +917,13 @@ h1 {
 }
 
 @keyframes oven-flicker {
-  0%, 100% { opacity: 0.6; }
-  50%       { opacity: 1;   }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Bandeau boutons en bas du corps */
@@ -939,14 +943,14 @@ h1 {
   border-radius: 50%;
   background: #8a7860;
   border: 1.5px solid #6a5840;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Highlight actif */
 #oven-container.oven-ready .oven-body {
   border-color: var(--matcha);
   box-shadow:
-    inset 0 2px 4px rgba(255,255,255,0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
     0 0 0 3px var(--matcha-pale);
 }
 
@@ -955,12 +959,20 @@ h1 {
 }
 
 @keyframes ovenSuccess {
-  0%   { transform: translateY(-50%) scale(1);    }
-  50%  { transform: translateY(-50%) scale(1.05); }
-  100% { transform: translateY(-50%) scale(1);    }
+  0% {
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    transform: translateY(-50%) scale(1.05);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+  }
 }
 
-#oven-liquid { display: none; }
+#oven-liquid {
+  display: none;
+}
 
 #oven-label {
   font-size: 10px;
@@ -990,14 +1002,14 @@ h1 {
   position: relative;
   overflow: visible;
   box-shadow:
-    inset 0 2px 6px rgba(0,0,0,0.12),
-    0 4px 12px rgba(0,0,0,0.15);
+    inset 0 2px 6px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 #cutting-board.drop-hover {
   border-color: var(--matcha);
   box-shadow:
-    inset 0 2px 6px rgba(0,0,0,0.12),
+    inset 0 2px 6px rgba(0, 0, 0, 0.12),
     0 0 0 3px var(--matcha-pale);
 }
 
@@ -1025,9 +1037,15 @@ h1 {
   background: rgba(160, 120, 60, 0.25);
   border-radius: 1px;
 }
-.board-grain:nth-child(1) { top: 35px; }
-.board-grain:nth-child(2) { top: 70px; }
-.board-grain:nth-child(3) { top: 105px; }
+.board-grain:nth-child(1) {
+  top: 35px;
+}
+.board-grain:nth-child(2) {
+  top: 70px;
+}
+.board-grain:nth-child(3) {
+  top: 105px;
+}
 
 /* ── Bloc de chocolat ── */
 #chocolate-block {
@@ -1050,7 +1068,7 @@ h1 {
   padding: 4px;
   background: #e8d9a0;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .choc-square {
@@ -1059,7 +1077,9 @@ h1 {
   background: #fdf3c0;
   border-radius: 2px;
   border: 1px solid #c9a84c;
-  transition: opacity 0.3s, transform 0.3s;
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
 }
 
 .choc-square.cut {
@@ -1071,9 +1091,9 @@ h1 {
 #cutting-board-container.chop-active #cutting-board {
   border-color: var(--matcha);
   box-shadow:
-    inset 0 2px 6px rgba(0,0,0,0.12),
+    inset 0 2px 6px rgba(0, 0, 0, 0.12),
     0 0 0 3px var(--matcha-pale),
-    0 4px 12px rgba(0,0,0,0.15);
+    0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 #cutting-board-label {
@@ -1145,9 +1165,15 @@ h1 {
 }
 
 @keyframes crack {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.03) rotate(-1deg); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03) rotate(-1deg);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .choc-piece {
@@ -1156,7 +1182,13 @@ h1 {
   height: 22px;
   opacity: 0;
   transform: translate(0, 0) scale(0.7);
-  transition: transform 220ms ease, opacity 220ms ease;
+  transition:
+    transform 220ms ease,
+    opacity 220ms ease;
+  display: block;
+  padding: 0;
+  background: none;
+  border: none;
 }
 
 #chocolate-pieces.visible .choc-piece {
@@ -1164,16 +1196,15 @@ h1 {
   transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1);
 }
 
-.choc-piece .ingredient-visual {
+.chopped-chocolate-visual {
   width: 18px;
   height: 18px;
-  border-radius: 3px;
-  background: #fdf3c0;
-  border: 1px solid #d4c070;
-  margin: 2px;
+  background: #e8d9a0;
+  border: 1px solid #d4b896;
+  border-radius: 6px;
   box-shadow:
-          inset 1px 1px 2px rgba(255,255,255,0.4),
-          inset -1px -1px 2px rgba(0,0,0,0.1);
+    inset 0 1px 2px rgba(255, 255, 255, 0.6),
+    0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 #chocolate-pieces {

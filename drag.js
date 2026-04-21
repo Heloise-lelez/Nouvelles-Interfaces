@@ -74,6 +74,14 @@ export function rejectDrop() {
   pendingDropItem = null;
 }
 
+export function confirmDropChocolate() {
+  if (!pendingDropItem) return;
+  const el = pendingDropItem;
+
+  el.classList.add("used");
+  pendingDropItem = null;
+}
+
 export function resetDrop() {
   pendingDropItem = null;
   matchaHeight = 0;
@@ -205,8 +213,11 @@ function startDrag(el, x, y) {
   el.classList.add("grabbed");
 
   // Couleur du ghost = couleur visuelle de l'ingrédient
-  const visual = el.querySelector(".ingredient-visual");
-  const color = getComputedStyle(visual).backgroundColor;
+  let visual = el.querySelector(".ingredient-visual");
+  if (!visual) {
+    visual = el.querySelector(".chopped-chocolate-visual");
+  }
+  const color = visual ? getComputedStyle(visual).backgroundColor : "#fdf3c0";
   ghostCircle.style.background = color;
 
   ghost.classList.remove("hidden");
@@ -240,17 +251,22 @@ function dropOnBowl(el, target = "bowl") {
 
   pendingDropItem = el;
 
-  // Lance l'animation de chute AVANT de notifier script.js
-  const ghostLeft = ghost.style.left;
-  const ghostTop = ghost.style.top;
-  const ghostColor = ghostCircle.style.background;
-
   ghost.classList.add("hidden"); // cache l'original
 
-  animatePhysicsDrop(ghostLeft, ghostTop, ghostColor, () => {
-    // Une fois la chute terminée, notifie script.js
+  // Si on drop sur la planche, pas d'animation de chute
+  if (target === "board") {
     dropCallbacks.forEach((cb) => cb(id, target));
-  });
+  } else {
+    // Lance l'animation de chute AVANT de notifier script.js
+    const ghostLeft = ghost.style.left;
+    const ghostTop = ghost.style.top;
+    const ghostColor = ghostCircle.style.background;
+
+    animatePhysicsDrop(ghostLeft, ghostTop, ghostColor, () => {
+      // Une fois la chute terminée, notifie script.js
+      dropCallbacks.forEach((cb) => cb(id, target));
+    });
+  }
 }
 
 // Nouvelle fonction — chute avec rebond
@@ -457,7 +473,16 @@ function isOverCuttingBoard(x, y) {
   // Si le container est caché, getBoundingClientRect retourne des zéros
   if (r.width === 0 || r.height === 0) return false;
 
-  console.log("Board rect:", r.left, r.top, r.right, r.bottom, "| cursor:", x, y);
+  console.log(
+    "Board rect:",
+    r.left,
+    r.top,
+    r.right,
+    r.bottom,
+    "| cursor:",
+    x,
+    y,
+  );
 
   const margin = 40;
   return (

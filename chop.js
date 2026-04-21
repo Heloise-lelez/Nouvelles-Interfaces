@@ -1,17 +1,17 @@
 // chop.js — gestion de découpe, avec chocolat en grille sur la planche
-const LINES_NEEDED     = 3;
+const LINES_NEEDED = 3;
 const PROXIMITY_THRESH = 0.07;
-const FOLLOW_FRAMES    = 16;
-const IDLE_RESET_MS    = 1800;
+const FOLLOW_FRAMES = 16;
+const IDLE_RESET_MS = 1800;
 
 // ── État ──────────────────────────────────────────────────────────────────────
-let isActive       = false;
-let completeCbs    = [];
+let isActive = false;
+let completeCbs = [];
 let linesCompleted = 0;
-let framesOnLine   = 0;
+let framesOnLine = 0;
 let currentLineIdx = 0;
-let idleTimer      = null;
-let lines          = [];
+let idleTimer = null;
+let lines = [];
 let chocolateIsCut = false;
 
 // ── Chocolat DOM ──────────────────────────────────────────────────────────────
@@ -43,7 +43,10 @@ function buildChocSquares() {
 export function showChocolateOnBoard() {
   buildChocSquares();
   const block = getChocolateBlock();
-  if (block) block.classList.add("visible");
+  if (block) {
+    block.classList.remove("hidden");
+    block.classList.add("visible");
+  }
 }
 
 /** Cache / reset le chocolat */
@@ -55,7 +58,15 @@ export function hideChocolateOnBoard() {
   }
   const grid = getChocGrid();
   if (grid) {
-    grid.querySelectorAll(".choc-square").forEach(sq => sq.classList.remove("cut"));
+    grid
+      .querySelectorAll(".choc-square")
+      .forEach((sq) => sq.classList.remove("cut"));
+  }
+  // Cacher et vider les pièces de chocolat découpées
+  const piecesWrap = document.getElementById("chocolate-pieces");
+  if (piecesWrap) {
+    piecesWrap.innerHTML = "";
+    piecesWrap.classList.add("hidden");
   }
 }
 
@@ -86,9 +97,9 @@ function getBoardNormBounds() {
   if (!board) return { x: 0.3, y: 0.25, w: 0.18, h: 0.5 };
   const rect = board.getBoundingClientRect();
   return {
-    x: rect.left   / window.innerWidth,
-    y: rect.top    / window.innerHeight,
-    w: rect.width  / window.innerWidth,
+    x: rect.left / window.innerWidth,
+    y: rect.top / window.innerHeight,
+    w: rect.width / window.innerWidth,
     h: rect.height / window.innerHeight,
   };
 }
@@ -101,17 +112,19 @@ function generateLines() {
   // Le chocolat fait ~96px (4×22+3×2+8) centré dans la planche de 200px
   // → offset horizontal ~ (200-96)/2 = 52px
   const chocOffsetX = 52 / window.innerWidth;
-  const chocWidth   = 96 / window.innerWidth;
-  const segW        = chocWidth / (LINES_NEEDED + 1);
+  const chocWidth = 96 / window.innerWidth;
+  const segW = chocWidth / (LINES_NEEDED + 1);
 
   for (let i = 0; i < LINES_NEEDED; i++) {
     const x = b.x + chocOffsetX + segW * (i + 1);
     // Trait vertical du haut au bas du chocolat
-    const yTop    = b.y + (b.h * 0.25);
-    const yBottom = b.y + (b.h * 0.75);
+    const yTop = b.y + b.h * 0.25;
+    const yBottom = b.y + b.h * 0.75;
     lines.push({
-      x1: x, y1: yTop,
-      x2: x, y2: yBottom,
+      x1: x,
+      y1: yTop,
+      x2: x,
+      y2: yBottom,
       progress: 0,
       done: false,
     });
@@ -126,19 +139,19 @@ function initCanvas() {
   canvas = document.createElement("canvas");
   canvas.id = "chop-canvas";
   Object.assign(canvas.style, {
-    position:      "fixed",
-    inset:         "0",
-    width:         "100%",
-    height:        "100%",
+    position: "fixed",
+    inset: "0",
+    width: "100%",
+    height: "100%",
     pointerEvents: "none",
-    zIndex:        "50",
-    display:       "none",
+    zIndex: "50",
+    display: "none",
   });
   document.body.appendChild(canvas);
   ctx = canvas.getContext("2d");
 
   function resize() {
-    canvas.width  = window.innerWidth;
+    canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
   resize();
@@ -202,7 +215,7 @@ export function processChop(hand) {
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
       line.progress = 0;
-      framesOnLine  = 0;
+      framesOnLine = 0;
     }, IDLE_RESET_MS);
   }
 
@@ -212,9 +225,9 @@ export function processChop(hand) {
 // ── Validation ────────────────────────────────────────────────────────────────
 function validateLine() {
   const line = lines[currentLineIdx];
-  line.done     = true;
+  line.done = true;
   line.progress = 1;
-  framesOnLine  = 0;
+  framesOnLine = 0;
 
   cutColumn(currentLineIdx + 1);
 
@@ -253,7 +266,7 @@ function renderFrame() {
   const labelX = (b.x + b.w / 2) * W;
   const labelY = (b.y - 0.04) * H;
 
-  ctx.font      = `500 13px 'DM Sans', sans-serif`;
+  ctx.font = `500 13px 'DM Sans', sans-serif`;
   ctx.fillStyle = "rgba(92,138,74,0.9)";
   ctx.textAlign = "center";
   ctx.fillText("✂  Suivez les traits pour couper", labelX, labelY);
@@ -279,16 +292,18 @@ function renderFrame() {
     const ly2 = line.y2 * H;
 
     const isCurrent = i === currentLineIdx && !line.done;
-    const isDone    = line.done;
-    const isFuture  = i > currentLineIdx;
+    const isDone = line.done;
+    const isFuture = i > currentLineIdx;
 
     // Trait fantôme
-    ctx.strokeStyle = isFuture ? "rgba(180,140,80,0.25)"
-                    : isDone   ? "rgba(92,138,74,0.3)"
-                    :            "rgba(180,140,80,0.5)";
-    ctx.lineWidth   = 2;
+    ctx.strokeStyle = isFuture
+      ? "rgba(180,140,80,0.25)"
+      : isDone
+        ? "rgba(92,138,74,0.3)"
+        : "rgba(180,140,80,0.5)";
+    ctx.lineWidth = 2;
     ctx.setLineDash([6, 5]);
-    ctx.lineCap     = "round";
+    ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(lx1, ly1);
     ctx.lineTo(lx2, ly2);
@@ -299,7 +314,7 @@ function renderFrame() {
     if (!isFuture && line.progress > 0) {
       const fillY2 = ly1 + (ly2 - ly1) * line.progress;
       ctx.strokeStyle = isDone ? "#5c8a4a" : "#fff";
-      ctx.lineWidth   = isDone ? 3 : 2.5;
+      ctx.lineWidth = isDone ? 3 : 2.5;
       ctx.globalAlpha = isDone ? 1 : 0.85;
       ctx.beginPath();
       ctx.moveTo(lx1, ly1);
@@ -310,7 +325,7 @@ function renderFrame() {
 
     // Check ou flèche
     if (isDone) {
-      ctx.font      = "bold 14px sans-serif";
+      ctx.font = "bold 14px sans-serif";
       ctx.fillStyle = "#5c8a4a";
       ctx.textAlign = "center";
       ctx.fillText("✓", lx1 + 12, (ly1 + ly2) / 2);
@@ -342,9 +357,9 @@ function flashCutEffect() {
 
 function drawArrow(ctx, x1, y1, x2, y2) {
   const angle = Math.atan2(y2 - y1, x2 - x1);
-  const mx    = (x1 + x2) / 2;
-  const my    = (y1 + y2) / 2;
-  const size  = 9;
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2;
+  const size = 9;
 
   ctx.save();
   ctx.translate(mx + 14, my);
@@ -353,7 +368,7 @@ function drawArrow(ctx, x1, y1, x2, y2) {
   ctx.beginPath();
   ctx.moveTo(size, 0);
   ctx.lineTo(-size * 0.6, -size * 0.5);
-  ctx.lineTo(-size * 0.6,  size * 0.5);
+  ctx.lineTo(-size * 0.6, size * 0.5);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
@@ -361,7 +376,8 @@ function drawArrow(ctx, x1, y1, x2, y2) {
 
 // ── Géométrie ─────────────────────────────────────────────────────────────────
 function distToSegment(px, py, x1, y1, x2, y2) {
-  const dx = x2 - x1, dy = y2 - y1;
+  const dx = x2 - x1,
+    dy = y2 - y1;
   const lenSq = dx * dx + dy * dy;
   if (lenSq === 0) return Math.hypot(px - x1, py - y1);
   const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lenSq));
@@ -369,7 +385,8 @@ function distToSegment(px, py, x1, y1, x2, y2) {
 }
 
 function projectOnSegment(px, py, x1, y1, x2, y2) {
-  const dx = x2 - x1, dy = y2 - y1;
+  const dx = x2 - x1,
+    dy = y2 - y1;
   const lenSq = dx * dx + dy * dy;
   if (lenSq === 0) return 0;
   return Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lenSq));
@@ -391,7 +408,7 @@ function revealChocolatePieces() {
     piece.dataset.id = "chopped-chocolate";
 
     const visual = document.createElement("div");
-    visual.className = "ingredient-visual chocolate-visual";
+    visual.className = "chopped-chocolate-visual";
     piece.appendChild(visual);
 
     const col = i % 4;

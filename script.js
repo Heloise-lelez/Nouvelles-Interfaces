@@ -3,6 +3,7 @@ import {
   processDrag,
   onDrop,
   confirmDrop,
+  confirmDropChocolate,
   rejectDrop,
   resetDrop,
   setBowlGrabEnabled,
@@ -45,12 +46,13 @@ const finishReset = document.getElementById("finish-reset");
 const whiskZone = document.getElementById("whisk-zone");
 const glassContainer = document.getElementById("glass-container");
 const ovenContainer = document.getElementById("oven-container");
-const cuttingBoardContainer = document.getElementById("cutting-board-container");
+const cuttingBoardContainer = document.getElementById(
+  "cutting-board-container",
+);
 
 let nextIdx = 0;
 let stepIdx = 0;
 let chocolateIsCut = false;
-
 
 getSteps().forEach((s) => s.classList.remove("active"));
 if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
@@ -91,7 +93,7 @@ onDrop((id, target) => {
 
   // Étape 1: chocolate → board
   if (expectedAtStep === "chocolate" && target === "board") {
-    confirmDrop();
+    confirmDropChocolate(); // pas d'animation vers le bol, juste marquer comme utilisé
     showChocolateOnBoard(); // affiche le bloc à découper
     completeStep(stepIdx);
     updateStepIndex(stepIdx + 1); // → étape "chop"
@@ -99,11 +101,25 @@ onDrop((id, target) => {
   }
 
   // Étape 3: chopped-chocolate → bowl (SEULEMENT après chop)
-  if (expectedAtStep === "chopped-chocolate" && target === "bowl" && chocolateIsCut) {
+  if (
+    expectedAtStep === "chopped-chocolate" &&
+    target === "bowl" &&
+    chocolateIsCut
+  ) {
     confirmDrop();
     hideChocolateOnBoard(); // cache les morceaux utilisés
     completeStep(stepIdx);
     updateStepIndex(stepIdx + 1); // → étape "whisk"
+    return;
+  }
+
+  // Ignorer le drop de chopped-chocolate sur la planche (pas d'erreur, juste le rejeter)
+  if (
+    expectedAtStep === "chopped-chocolate" &&
+    id === "chopped-chocolate" &&
+    target === "board"
+  ) {
+    rejectDrop();
     return;
   }
 
@@ -199,8 +215,8 @@ function updateRecipeUI() {
   if (recipe.type === "drink") {
     glassContainer.style.display = "flex";
     ovenContainer.style.display = "none";
-  cuttingBoardContainer.style.display = "none";
-}
+    cuttingBoardContainer.style.display = "none";
+  }
   // Afficher le four pour les gâteaux (baking)
   else if (recipe.type === "baking") {
     glassContainer.style.display = "none";
@@ -345,6 +361,9 @@ function resetRecipe() {
 
   // Réinitialiser le drag
   resetDrop();
+
+  // Réinitialiser la découpe du chocolat
+  resetChop();
 }
 
 // ── Confettis canvas ─────────────────────────────────────
