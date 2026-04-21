@@ -142,7 +142,7 @@ function finishWhisk() {
       butterLayer.style.opacity = "0";
       sugarLayer.style.opacity = "0";
       eggLayer.style.background = "#6a9c45";
-    } if (chocolateHeight > 0) {
+    } else if (chocolateHeight > 0) {
       eggLayer.style.opacity = "0";
       flourLayer.style.opacity = "0";
       chocolateLayer.style.background = "#6a9c45";

@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Matcha Bar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Webcam caché (requis par hand-tracking.js) -->
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id="output"></canvas>
+
+    <!-- Curseur gestuel -->
+    <div id="cursor">
+      <div id="cursor-ring"></div>
+      <div id="cursor-dot"></div>
+    </div>
+
+    <!-- Layout principal -->
+    <div id="app">
+      <!-- COLONNE GAUCHE : Recette en cours -->
+      <aside id="panel-recipe">
+        <div class="panel-header">
+          <span class="kanji">抹茶</span>
+          <h1>Matcha Bar</h1>
+        </div>
+
+        <div id="recipe-selector">
+          <p class="label">dire le nom d'une recette</p>
+          <div class="recipe-chips"></div>
+        </div>
+
+        <div id="recipe-steps">
+          <p class="label">étapes</p>
+          <ol id="steps-list"></ol>
+        </div>
+
+        <!-- Mic status -->
+        <div id="mic-status">
+          <div class="mic-status-content">
+            <div class="mic-icon">
+              <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
+                <rect
+                  x="4"
+                  y="0"
+                  width="6"
+                  height="9"
+                  rx="3"
+                  fill="currentColor"
+                />
+                <path
+                  d="M1 8a6 6 0 0 0 12 0"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  fill="none"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="7"
+                  y1="14"
+                  x2="7"
+                  y2="16"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            <span id="mic-label">en écoute…</span>
+          </div>
+          <button
+            id="mic-reset"
+            title="Redémarrer la reconnaissance vocale"
+            style="
+              margin-left: 12px;
+              padding: 4px 8px;
+              font-size: 12px;
+              background: #7ab060;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-weight: 600;
+            "
+          >
+            ↻
+          </button>
+        </div>
+      </aside>
+
+      <!-- ZONE CENTRALE : Plan de travail -->
+      <main id="workspace">
+        <!-- Grain texture overlay -->
+        <div class="wood-grain"></div>
+
+        <!-- Label plan de travail -->
+        <div id="workspace-label">plan de travail</div>
+
+        <!-- Croix d'erreur -->
+        <div id="error-cross" class="hidden"></div>
+
+        <!-- BOL central -->
+        <div id="bowl-container">
+          <div id="bowl">
+            <div id="bowl-chocolate-layer"></div>
+            <div id="bowl-flour-layer"></div>
+            <div id="bowl-egg-layer"></div>
+            <div id="bowl-sugar-layer"></div>
+            <div id="bowl-butter-layer"></div>
+
+            <div id="bowl-matcha-layer"></div>
+            <div id="bowl-water-layer"></div>
+            <div id="bowl-ice-layer"></div>
+
+          </div>
+          <div id="bowl-label">bol de préparation</div>
+
+          <!-- Zone de fouettage (autour du bol) -->
+          <div id="whisk-zone">
+            <svg
+              id="whisk-path-svg"
+              width="120"
+              height="40"
+              viewBox="0 0 120 40"
+            >
+              <path
+                d="M5 5 L25 35 L45 5 L65 35 L85 5 L105 35 L115 20"
+                fill="none"
+                stroke="#C8B89A"
+                stroke-width="1.5"
+                stroke-dasharray="5 4"
+                stroke-linecap="round"
+              />
+              <!-- Points du tracé -->
+              <circle
+                cx="5"
+                cy="5"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+              <circle
+                cx="25"
+                cy="35"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+              <circle
+                cx="45"
+                cy="5"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+              <circle
+                cx="65"
+                cy="35"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+              <circle
+                cx="85"
+                cy="5"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+              <circle
+                cx="105"
+                cy="35"
+                r="3"
+                fill="#8A7A5A"
+                opacity="0.4"
+                class="whisk-dot"
+              />
+            </svg>
+            <div id="whisk-gauge-wrap">
+              <div id="whisk-gauge-bar">
+                <div id="whisk-gauge-fill" style="width: 0%"></div>
+              </div>
+              <span id="whisk-gauge-label">0%</span>
+            </div>
+          </div>
+        </div>
+        <!-- VERRE -->
+        <div id="glass-container">
+          <div id="glass">
+            <div id="glass-liquid"></div>
+            <div id="glass-ice"></div>
+          </div>
+          <div id="glass-label">verre</div>
+        </div>
+        <!-- FOUR -->
+        <div id="oven-container">
+          <div id="oven">
+            <!-- Corps du four -->
+            <div class="oven-body">
+              <!-- Vitre -->
+              <div class="oven-window">
+                <div class="oven-heat"></div>
+              </div>
+              <!-- Boutons de commande -->
+              <div class="oven-knobs">
+                <div class="oven-knob"></div>
+                <div class="oven-knob"></div>
+                <div class="oven-knob"></div>
+              </div>
+            </div>
+          </div>
+          <div id="oven-label">four</div>
+        </div>
+        <!-- PLANCHE -->
+        <div id="cutting-board-container">
+          <div id="cutting-board">
+            <!-- Rainures déco de la planche -->
+            <div class="board-grain"></div>
+            <div class="board-grain"></div>
+            <div class="board-grain"></div>
+            <!-- Le chocolat en rectangle, caché par défaut -->
+            <div id="chocolate-block">
+              <div class="choc-grid">
+              </div>
+            </div>
+
+            <div id="chocolate-pieces" class="hidden"></div>
+          </div>
+          <div id="cutting-board-label">planche à découper</div>
+        </div>
+      </main>
+
+      <!-- COLONNE DROITE : Ingrédients -->
+      <aside id="panel-ingredients">
+        <p class="label">ingrédients</p>
+
+        <div id="ingredients-grid"></div>
+
+        <!-- Ghost d'ingrédient en cours de drag -->
+        <div id="drag-ghost" class="drag-ghost hidden">
+          <div class="drag-ghost-circle"></div>
+        </div>
+      </aside>
+    </div>
+    <!-- #app -->
+
+    <!-- Overlay de fin (confettis + message) -->
+    <div id="finish-overlay" class="hidden">
+      <div id="finish-card">
+        <div class="finish-emoji">
+          <svg width="48" height="48" viewBox="0 0 48 48">
+            <circle cx="24" cy="32" r="14" fill="#5C8A4A" />
+            <ellipse cx="24" cy="18" rx="10" ry="6" fill="#7AB060" />
+            <ellipse cx="24" cy="16" rx="7" ry="4" fill="#9EC87A" />
+          </svg>
+        </div>
+        <h2>Parfait !</h2>
+        <p>Votre iced matcha latte est prêt.</p>
+        <div
+          id="finish-mic-label"
+          style="
+            font-size: 14px;
+            color: #5c8a4a;
+            margin: 16px 0;
+            min-height: 20px;
+          "
+        >
+          Dites 'nouvelle recette'
+        </div>
+        <button id="finish-reset">Nouvelle recette</button>
+      </div>
+      <canvas id="confetti-canvas"></canvas>
+    </div>
+
+    <!-- Scripts MediaPipe (fournis par le prof) -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="hand-tracking.js"></script>
+
+    <!-- Nos modules -->
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
