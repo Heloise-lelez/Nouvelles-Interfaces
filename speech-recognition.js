@@ -14,7 +14,7 @@ async function loadRecipes() {
   try {
     const response = await fetch("store.json");
     const data = await response.json();
-    allRecipes = data.drinks || [];
+    allRecipes = data.recipes || [];
 
     allRecipes.forEach((recipe) => {
       recipes[recipe.id] = recipe;
