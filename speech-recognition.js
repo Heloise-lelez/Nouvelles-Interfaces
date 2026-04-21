@@ -96,6 +96,7 @@ recognition.onresult = (event) => {
     if (matchedRecipe) {
       selectRecipe(matchedRecipe);
       micLabel.textContent = `${recipes[matchedRecipe].name} sélectionné! 🎯`;
+      loadIngredients(recipes[matchedRecipe].ingredients);
     } else {
       micLabel.textContent = "recette non reconnue, réessayez";
     }
@@ -133,7 +134,7 @@ function selectRecipe(recipeId) {
   } else {
     recipeStepsSection.classList.add("hidden");
   }
-  
+
   // Charger les ingrédients seulement quand on change de recette
   loadIngredients(recipe.ingredients);
 }
@@ -181,12 +182,12 @@ export function resetSpeechRecognition() {
   } catch (e) {
     console.warn("Erreur lors de l'arrêt de la reconnaissance:", e);
   }
-  
+
   // Réinitialiser les propriétés
   recognition.lang = "fr-FR";
   recognition.continuous = true;
   recognition.interimResults = true;
-  
+
   // Redémarrer
   try {
     recognition.start();
@@ -201,17 +202,17 @@ export function resetAndSelectRecipe(recipeId) {
   if (!recipes[recipeId]) {
     recipeId = allRecipes[0].id;
   }
-  
+
   if (finishRecognition) {
     finishRecognition.stop();
     finishRecognition = null;
   }
-  
+
   const finishOverlay = document.getElementById("finish-overlay");
   if (finishOverlay) finishOverlay.classList.add("hidden");
-  
+
   selectRecipe(recipeId);
-  
+
   recognition.start();
   window.dispatchEvent(new Event("recipeReset"));
 }
@@ -219,7 +220,7 @@ export function resetAndSelectRecipe(recipeId) {
 function updateFinishMessage() {
   const recipe = getCurrentRecipe();
   if (!recipe) return;
-  
+
   const finishText = document.querySelector("#finish-card > p");
   if (finishText) {
     finishText.textContent = `Votre ${recipe.name} est prêt.`;
@@ -230,7 +231,7 @@ let finishRecognition = null;
 
 export function initFinishRecognition() {
   updateFinishMessage();
-  
+
   if (finishRecognition) return;
 
   finishRecognition = new SpeechRecognition();
@@ -264,24 +265,36 @@ export function initFinishRecognition() {
     transcript = transcript.toLowerCase().trim();
 
     if (event.results[event.results.length - 1].isFinal) {
-      if (finishMicLabel) finishMicLabel.textContent = `vous avez dit: "${transcript}"`;
+      if (finishMicLabel)
+        finishMicLabel.textContent = `vous avez dit: "${transcript}"`;
 
-      if (transcript.includes("nouvelle recette") || transcript.includes("nouvelle")) {
-        if (finishMicLabel) finishMicLabel.textContent = "Nouvelle recette en cours…";
-        const randomRecipe = allRecipes[Math.floor(Math.random() * allRecipes.length)];
+      if (
+        transcript.includes("nouvelle recette") ||
+        transcript.includes("nouvelle")
+      ) {
+        if (finishMicLabel)
+          finishMicLabel.textContent = "Nouvelle recette en cours…";
+        const randomRecipe =
+          allRecipes[Math.floor(Math.random() * allRecipes.length)];
         setTimeout(() => resetAndSelectRecipe(randomRecipe.id), 500);
         return;
       }
 
       for (const recipe of allRecipes) {
-        if (transcript.includes(recipe.name.toLowerCase()) || recipe.keywords.some(kw => transcript.includes(kw.toLowerCase()))) {
-          if (finishMicLabel) finishMicLabel.textContent = `${recipe.name} en cours…`;
+        if (
+          transcript.includes(recipe.name.toLowerCase()) ||
+          recipe.keywords.some((kw) => transcript.includes(kw.toLowerCase()))
+        ) {
+          if (finishMicLabel)
+            finishMicLabel.textContent = `${recipe.name} en cours…`;
           setTimeout(() => resetAndSelectRecipe(recipe.id), 500);
           return;
         }
       }
 
-      if (finishMicLabel) finishMicLabel.textContent = "Dites 'nouvelle recette' ou le nom d'une recette";
+      if (finishMicLabel)
+        finishMicLabel.textContent =
+          "Dites 'nouvelle recette' ou le nom d'une recette";
     }
   };
 

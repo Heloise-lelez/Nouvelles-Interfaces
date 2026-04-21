@@ -1,4 +1,4 @@
-// drag.js — gestion du pinch + drag des ingrédients vers le bol
+// drag.js — gestion du pinch + drag des ingrédients vers le bol + drag du bol
 
 const ghost = document.getElementById("drag-ghost");
 const ghostCircle = ghost.querySelector(".drag-ghost-circle");
@@ -7,9 +7,13 @@ const bowlMatchaLayer = document.getElementById("bowl-matcha-layer");
 const bowlWaterLayer = document.getElementById("bowl-water-layer");
 
 let draggedItem = null; // élément .ingredient en cours de drag
+let bowlGrabbed = false; // le bol est-il attrapé au pinch?
+let bowlGrabPos = { x: 0, y: 0 }; // position où on a attrapé le bol
+let bowlOffset = { x: 0, y: 0 }; // offset du bol par rapport à sa position initiale
 let wasPinching = false;
 let dropCallbacks = [];
 let pendingDropItem = null; // ingrédient en attente de validation
+let allowBowlGrab = false; // le grab du bol est-il autorisé à cette étape?
 
 // ── Hauteurs des couches ──────────────────────────────
 let matchaHeight = 0; // hauteur du matcha
@@ -25,6 +29,18 @@ const LIQUID_COLORS = {
 };
 
 // ── API publique ─────────────────────────────────────────
+export function isBowlGrabbed() {
+  return bowlGrabbed;
+}
+
+export function getBowlOffset() {
+  return bowlOffset;
+}
+
+export function setBowlGrabEnabled(enabled) {
+  allowBowlGrab = enabled;
+}
+
 export function onDrop(cb) {
   dropCallbacks.push(cb);
 }
@@ -70,29 +86,88 @@ export function processDrag(hand) {
   const pinchStarted = hand.isPinching && !wasPinching;
   const pinchEnded = !hand.isPinching && wasPinching;
 
-  // 1. Début du pinch : cherche un ingrédient sous le curseur
-  if (pinchStarted) {
-    const el = ingredientUnderCursor(x, y);
-    if (el && !el.classList.contains("used")) {
-      startDrag(el, x, y);
-    }
+  // Priorité 1 : si le bol est déjà attrapé, le déplacer
+  if (bowlGrabbed && hand.isPinching) {
+    moveBowlDrag(x, y);
   }
 
-  // 2. En cours de drag : déplace le ghost
+  // Priorité 2 : si un ingrédient est déjà en cours de drag, continuer
   if (draggedItem && hand.isPinching) {
     moveDrag(x, y);
   }
 
-  // 3. Fin du pinch : dépose ou annule
-  if (pinchEnded && draggedItem) {
-    if (isOverBowl(x, y)) {
-      dropOnBowl(draggedItem);
-    } else {
-      cancelDrag();
+  // Début du pinch : cherche un ingrédient ou le bol
+  if (pinchStarted) {
+    const el = ingredientUnderCursor(x, y);
+    if (el && !el.classList.contains("used")) {
+      startDrag(el, x, y);
+    } else if (allowBowlGrab && isBowlUnderCursor(x, y)) {
+      startBowlDrag(x, y);
+    }
+  }
+
+  // Fin du pinch : dépose ou annule
+  if (pinchEnded) {
+    if (draggedItem) {
+      if (isOverBowl(x, y)) {
+        dropOnBowl(draggedItem);
+      } else {
+        cancelDrag();
+      }
+    }
+    if (bowlGrabbed) {
+      releaseBowl();
     }
   }
 
   wasPinching = hand.isPinching;
+}
+
+// ── Fonctions internes ───────────────────────────────────
+
+// Détecte si le bol est sous le curseur
+function isBowlUnderCursor(x, y) {
+  const r = bowl.getBoundingClientRect();
+  const margin = 20;
+  return (
+    x > r.left - margin &&
+    x < r.right + margin &&
+    y > r.top - margin &&
+    y < r.bottom + margin
+  );
+}
+
+function startBowlDrag(x, y) {
+  bowlGrabbed = true;
+  bowlGrabPos = { x, y };
+  bowlOffset = { x: 0, y: 0 };
+  bowl.classList.add("grabbed");
+  ghost.classList.remove("hidden");
+  ghostCircle.style.background = "rgba(100, 80, 60, 0.5)";
+  moveBowlDrag(x, y);
+}
+
+function moveBowlDrag(x, y) {
+  // Calculer le déplacement depuis le grip initial
+  const offsetX = x - bowlGrabPos.x;
+  const offsetY = y - bowlGrabPos.y;
+
+  bowlOffset = { x: offsetX, y: offsetY };
+
+  // Appliquer le transform au bol
+  bowl.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+
+  // Le ghost suit aussi la main
+  ghost.style.left = x + "px";
+  ghost.style.top = y + "px";
+}
+
+function releaseBowl() {
+  bowlGrabbed = false;
+  bowl.classList.remove("grabbed");
+  bowl.style.transform = "translate(0px, 0px)";
+  bowlOffset = { x: 0, y: 0 };
+  ghost.classList.add("hidden");
 }
 
 // ── Fonctions internes ───────────────────────────────────

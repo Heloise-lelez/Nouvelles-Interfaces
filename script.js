@@ -4,6 +4,7 @@ import {
   confirmDrop,
   rejectDrop,
   resetDrop,
+  setBowlGrabEnabled,
 } from "./drag.js";
 import {
   processWhisk,
@@ -18,6 +19,13 @@ import {
   resetSpeechRecognition,
 } from "./speech-recognition.js";
 
+import {
+  processPour,
+  onPourComplete,
+  resetPour,
+  setPourActive,
+  setCurrentStepId,
+} from "./pour.js";
 
 // ── Éléments DOM ─────────────────────────────────────────
 const cursor = document.getElementById("cursor");
@@ -25,6 +33,7 @@ const getSteps = () => document.querySelectorAll(".step");
 const finishOverlay = document.getElementById("finish-overlay");
 const finishReset = document.getElementById("finish-reset");
 const whiskZone = document.getElementById("whisk-zone");
+const glassContainer = document.getElementById("glass-container");
 
 const RECIPE_ORDER = ["water", "ice", "milk"];
 let nextIdx = 0; // index dans RECIPE_ORDER
@@ -33,6 +42,7 @@ let stepIdx = 0; // étape DOM active (0-indexed) — on commence à "Tamiser 2g
 getSteps().forEach((s) => s.classList.remove("active"));
 if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
 setWhiskActive(false); // désactive la détection du fouettage au démarrage
+setCurrentStepId(null); // initialise l'étape courante pour le versement
 
 window.onHandUpdate((hand) => {
   const x = (1 - hand.x) * window.innerWidth; // Flip X to match mirrored camera
@@ -42,6 +52,17 @@ window.onHandUpdate((hand) => {
   cursor.style.left = x + "px";
   cursor.style.top = y + "px";
   cursor.classList.toggle("pinching", hand.isPinching);
+
+  // Pour verser
+  processDrag({ ...hand, x: 1 - hand.x, y: hand.y });
+  processWhisk(hand);
+  processPour(hand, hand.landmarks);
+
+  // Écouter la fin du versement :
+  onPourComplete(() => {
+    completeStep(stepIdx);
+    setTimeout(showFinish, 700);
+  });
 
   // Modules (passer les coordonnées transformées)
   processDrag({ ...hand, x: 1 - hand.x, y: hand.y });
@@ -53,14 +74,17 @@ onDrop((id) => {
   const recipe = getCurrentRecipe();
   if (!recipe) return;
 
-  const expectedIngredients = recipe.ingredients.map((ing) => ing.id);
-  const expectedAtStep = expectedIngredients[stepIdx];
+  const currentStep = recipe.steps[stepIdx];
+  const expectedAtStep = currentStep?.id;
 
   console.log(
     `Tentative de drop de "${id}" à l'étape ${stepIdx}, attendu "${expectedAtStep}"`,
   );
 
-  if (id === expectedAtStep || expectedIngredients.includes(id)) {
+  if (id === expectedAtStep) {
+    console.log(
+      `✅ Ingrédient "${id}" ajouté avec succès à l'étape ${stepIdx}!`,
+    );
     confirmDrop();
     completeStep(stepIdx);
     updateStepIndex(stepIdx + 1);
@@ -75,7 +99,7 @@ onDrop((id) => {
       `❌ Erreur étape ${stepIdx} : attendu "${expectedAtStep}", reçu "${id}"`,
     );
     rejectDrop();
-    spill();
+    handleError();
   }
 });
 
@@ -99,15 +123,27 @@ function completeStep(idx) {
 }
 
 function updateStepIndex(newIdx) {
+  const recipe = getCurrentRecipe();
   stepIdx = newIdx;
+  console.log("recipe", recipe);
+
+  // Vérifier si l'étape actuelle existe
+  const currentStep = recipe.steps[stepIdx];
+
   // Gère l'activation/désactivation du fouettage selon l'étape
-  if (stepIdx === 2) {
+  if (currentStep?.id === "whisk") {
     setWhiskActive(true); // active le fouettage pour "Fouetter en W"
     whiskZone.classList.add("whisk-ready"); // affiche la whisk zone
   } else {
     setWhiskActive(false); // désactive pour les autres étapes
     whiskZone.classList.remove("whisk-ready"); // cache la whisk zone
   }
+
+  // Gère l'activation/désactivation du grab du bol selon l'étape
+  setBowlGrabEnabled(currentStep?.id === "pour");
+
+  // Transmet l'id de l'étape courante au module versement
+  setCurrentStepId(currentStep?.id);
 }
 
 function activateWhiskStep() {
@@ -129,18 +165,20 @@ function showFinish() {
 finishReset.addEventListener("click", () => {
   location.reload();
 });
-// ── Animation de renversement ───────────────────────────
-function spill() {
-  // Afficher la croix d'erreur
+
+// ── Gestion centralisée des erreurs ──────────────────────
+function handleError() {
+  console.log("Handling error: showing feedback and resetting recipe...");
+  // 1. Afficher la croix d'erreur
   showErrorCross();
 
-  // Jouer le son d'erreur
+  // 2. Jouer le son d'erreur
   playErrorSound();
 
-  // Réinitialiser après l'animation (1.2s total)
+  // 3. Réinitialiser la recette après les animations
   setTimeout(() => {
     resetRecipe();
-  }, 1200);
+  }, 700);
 }
 
 function showErrorCross() {
@@ -188,16 +226,15 @@ function playErrorSound() {
 }
 
 function resetRecipe() {
+  console.log("Resetting recipe state...");
   const bowl = document.getElementById("bowl");
-  const bowlLiquid = document.getElementById("bowl-liquid");
-  const bowlMatchaLayer = document.getElementById("bowl-matcha-layer");
 
-  // Vider le bol complètement
-  if (bowlLiquid) {
-    bowlLiquid.style.height = "0";
-  }
-  if (bowlMatchaLayer) {
-    bowlMatchaLayer.style.height = "0";
+  // Vider tous les layers du bol
+  if (bowl) {
+    const layers = bowl.querySelectorAll("[id$='-layer']");
+    layers.forEach((layer) => {
+      layer.style.height = "0";
+    });
   }
 
   // Réinitialiser les étapes
@@ -220,9 +257,34 @@ function resetRecipe() {
     ing.classList.remove("used");
   });
 
+  setPourActive(false);
+  glassContainer.classList.remove("pour-ready");
+  resetPour();
+
   // Réinitialiser le drag
   resetDrop();
 }
+
+// Dans la boucle onHandUpdate :
+window.onHandUpdate((hand) => {
+  const x = (1 - hand.x) * window.innerWidth;
+  const y = hand.y * window.innerHeight;
+
+  cursor.style.left = x + "px";
+  cursor.style.top = y + "px";
+  cursor.classList.toggle("pinching", hand.isPinching);
+
+  processDrag({ ...hand, x: 1 - hand.x, y: hand.y });
+  processWhisk(hand);
+  processPour(hand, hand.landmarks); // ← ajouter
+});
+
+// Écouter la fin du versement :
+onPourComplete(() => {
+  completeStep(stepIdx);
+  setTimeout(showFinish, 700);
+});
+
 // ── Confettis canvas ─────────────────────────────────────
 function launchConfetti() {
   const canvas = document.getElementById("confetti-canvas");
@@ -295,12 +357,17 @@ function playSuccessSound() {
 // ── Initialisation des recettes et démarrage de la reconnaissance vocale ───────────────────────
 window.onload = () => {
   initLoadRecipes();
+  console.log("Page loaded, initializing recipes and speech recognition...");
 
   // Écouter les changements de recette
+  let lastRecipeId = null;
   const observeRecipeChange = setInterval(() => {
     const recipe = getCurrentRecipe();
-    if (recipe) {
-      clearInterval(observeRecipeChange);
+    const currentRecipeId = recipe?.id;
+
+    if (currentRecipeId && currentRecipeId !== lastRecipeId) {
+      lastRecipeId = currentRecipeId;
+      resetRecipe();
     }
   }, 100);
 };
