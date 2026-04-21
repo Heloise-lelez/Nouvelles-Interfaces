@@ -8,6 +8,11 @@ const bowlWaterLayer = document.getElementById("bowl-water-layer");
 const bowlIceLayer = document.getElementById("bowl-ice-layer");
 const glassIce = document.getElementById("glass-ice");
 const cuttingBoard = document.getElementById("cutting-board-container");
+const bowlButterLayer = document.getElementById("bowl-butter-layer");
+const bowlSugarLayer = document.getElementById("bowl-sugar-layer");
+const bowlEggLayer = document.getElementById("bowl-egg-layer");
+const bowlFlourLayer = document.getElementById("bowl-flour-layer");
+const bowlChocolateLayer = document.getElementById("bowl-chocolate-layer");
 
 let draggedItem = null; // élément .ingredient en cours de drag
 let bowlGrabbed = false; // le bol est-il attrapé au pinch?
@@ -24,6 +29,12 @@ let waterHeight = 0; // hauteur de l'eau
 let totalHeight = 0; // 0..100
 let lastIngredient = null; // dernier ingrédient ajouté (autres que matcha/water)
 let iceCubesAdded = 0; // nombre de fois qu'on a ajouté des glaçons
+let butterHeight = 0; // hauteur du beurre
+let sugarHeight = 0; // hauteur du sucre
+let eggHeight = 0; // hauteur de l'œuf
+let flourHeight = 0; // hauteur de la farine
+let chocolateHeight = 0; // hauteur du chocolat
+
 
 // ── Couleurs du bol selon ingrédient ajouté ──────────────
 const LIQUID_COLORS = {
@@ -31,6 +42,11 @@ const LIQUID_COLORS = {
   water: "#6A9C45",
   ice: "#5A8C50",
   milk: "#98c690",
+  chocolate: "#fdf3c0",
+  flour: "#fbf5e7",
+  butter: "#fcf0a8",
+  sugar: "#eaebe5",
+  egg: "#d89961",
 };
 
 // ── API publique ─────────────────────────────────────────
@@ -89,6 +105,11 @@ export function resetDrop() {
   totalHeight = 0;
   lastIngredient = null;
   iceCubesAdded = 0;
+  butterHeight = 0;
+  sugarHeight = 0;
+  eggHeight = 0;
+  flourHeight = 0;
+  chocolateHeight = 0;
   bowlMatchaLayer.style.height = "0px";
   bowlMatchaLayer.style.background = LIQUID_COLORS.matcha;
   bowlWaterLayer.style.height = "0px";
@@ -417,8 +438,27 @@ function updateBowl(id) {
     bowlMatchaLayer.style.height = matchaHeight + "px";
     bowlMatchaLayer.style.background = LIQUID_COLORS.milk;
     bowlIceLayer.style.marginBottom = matchaHeight - iceHeight + "px";
+  } else if (id === "butter") {
+    butterHeight = 10 + matchaHeight
+    bowlButterLayer.style.height = butterHeight + "px";
+    bowlButterLayer.style.background = LIQUID_COLORS.butter;
+  } else if (id === "sugar") {
+    sugarHeight = 10 + butterHeight;
+    bowlSugarLayer.style.height = sugarHeight + "px";
+    bowlSugarLayer.style.background = LIQUID_COLORS.sugar;
+  } else if (id === "egg") {
+    eggHeight = 5 + sugarHeight;
+    bowlEggLayer.style.height = eggHeight + "px";
+    bowlEggLayer.style.background = LIQUID_COLORS.egg;
+  } else if (id === "flour") {
+    flourHeight = 15 + eggHeight;
+    bowlFlourLayer.style.height = flourHeight + "px";
+    bowlFlourLayer.style.background = LIQUID_COLORS.flour;
+  } else if (id === "chocolate") {
+    chocolateHeight = 20 + flourHeight
+    bowlChocolateLayer.style.height = chocolateHeight + "px";
+    bowlChocolateLayer.style.background = LIQUID_COLORS.chocolate;
   } else if (id !== "chocolate") {
-    // Autres ingrédients (lait, etc.)
     lastIngredient = id;
     totalHeight = Math.min(maxH, totalHeight + 22);
     bowlMatchaLayer.style.height = totalHeight + "px";

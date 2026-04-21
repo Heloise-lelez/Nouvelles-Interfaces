@@ -120,21 +120,41 @@ function finishWhisk() {
   // Récupérer les éléments pour fusionner les couches
   const matchaLayer = document.getElementById("bowl-matcha-layer");
   const waterLayer = document.getElementById("bowl-water-layer");
+  const butterLayer = document.getElementById("bowl-butter-layer");
+  const sugarLayer = document.getElementById("bowl-sugar-layer");
+  const eggLayer = document.getElementById("bowl-egg-layer");
+  const flourLayer = document.getElementById("bowl-flour-layer");
+  const chocolateLayer = document.getElementById("bowl-chocolate-layer");
   const bowl = document.getElementById("bowl");
 
   setTimeout(() => {
-    // Calculer la hauteur totale (matcha + eau)
     const matchaHeight = parseFloat(matchaLayer.style.height) || 0;
     const waterHeight = parseFloat(waterLayer.style.height) || 0;
-    const totalHeight = matchaHeight + waterHeight;
+    const butterHeight = parseFloat(butterLayer.style.height) || 0;
+    const sugarHeight = parseFloat(sugarLayer.style.height) || 0;
+    const eggHeight = parseFloat(eggLayer.style.height) || 0;
+    const flourHeight = parseFloat(flourLayer.style.height) || 0;
+    const chocolateHeight = parseFloat(chocolateLayer.style.height) || 0;
+    const totalHeight = matchaHeight + waterHeight + butterHeight + sugarHeight + eggHeight + flourHeight + chocolateHeight;
 
-    // Augmenter la hauteur du matcha pour couvrir les deux couches
-    matchaLayer.style.height = totalHeight + "px";
-    matchaLayer.style.background = "#6a9c45";
+    if (eggHeight > 0 ) {
+      matchaLayer.style.opacity = "0";
+      butterLayer.style.opacity = "0";
+      sugarLayer.style.opacity = "0";
+      eggLayer.style.background = "#6a9c45";
+    } if (chocolateHeight > 0) {
+      eggLayer.style.opacity = "0";
+      flourLayer.style.opacity = "0";
+      chocolateLayer.style.background = "#6a9c45";
+    } else {
+      // Augmenter la hauteur du matcha pour couvrir les deux couches
+      matchaLayer.style.height = totalHeight + "px";
+      matchaLayer.style.background = "#6a9c45";
 
-    // Faire disparaître la couche d'eau
-    waterLayer.style.height = "0px";
-    waterLayer.style.bottom = "0px";
+      // Faire disparaître la couche d'eau
+      waterLayer.style.height = "0px";
+      waterLayer.style.bottom = "0px";
+    }
 
     // Ajouter les classes
     bowl.classList.add("mixed");

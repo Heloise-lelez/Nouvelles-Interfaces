@@ -64,24 +64,25 @@
       "description": "Un cookie délicieux",
       "keywords": ["cookie", "cookie matcha"],
       "ingredients": [
+        { "id": "matcha", "name": "Matcha", "qty": "150 g" },
         { "id": "butter", "name": "Beurre demi-sel", "qty": "75 g" },
         { "id": "sugar", "name": "Sucre", "qty": "85 g" },
         { "id": "egg", "name": "Oeuf", "qty": "1" },
         { "id": "flour", "name": "Farine", "qty": "150 g" },
-        { "id": "matcha", "name": "Matcha", "qty": "150 g" },
         { "id": "chocolate", "name": "Chocolat blanc", "qty": "1 tab" }
       ],
       "steps": [
+        { "id": "matcha", "text": "Tamiser le matcha", "duration": "20s" },
         { "id": "butter", "text": "Ajouter le beurre demi-sel", "duration": "45s" },
         { "id": "sugar", "text": "Ajouter le sucre", "duration": "15s" },
         { "id": "egg", "text": "Ajouter l'oeuf", "duration": "20s" },
         { "id": "whisk", "text": "Mélanger le tout", "duration": "90s" },
         { "id": "flour", "text": "Tamiser la farine", "duration": "20s" },
-        { "id": "matcha", "text": "Tamiser le matcha", "duration": "20s" },
         { "id": "chocolate", "text": "Déposer le chocolat sur la planche",  "duration": "10s" },
         { "id": "chop", "text": "Hacher le chocolat",  "duration": "60s" },
         { "id": "chopped-chocolate", "text": "Ajouter le chocolat haché",  "duration": "20s" },
-        { "id": "whisk", "text": "Mélanger le tout", "duration": "90s" }
+        { "id": "whisk", "text": "Mélanger le tout", "duration": "90s" },
+        { "id": "oven", "text": "Mettre au four", "duration": "90s" }
       ]
     }
   ]
