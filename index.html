@@ -1,293 +1,585 @@
 <!doctype html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Matcha Bar</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <!-- Webcam caché (requis par hand-tracking.js) -->
-    <video id="webcam" autoplay playsinline></video>
-    <canvas id="output"></canvas>
+<head>
+  <meta charset="UTF-8" />
+  <title>Pâtissez — Matcha Bar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --wood: #e8dfd0;
+      --wood-dark: #d4c9b5;
+      --wood-grain: #c8b89a;
+      --panel-bg: #f0eae0;
+      --border: #d0c4b0;
+      --matcha: #5c8a4a;
+      --matcha-mid: #7ab060;
+      --matcha-pale: #c8dfb8;
+      --ink: #2a2420;
+      --ink-mid: #5a5048;
+      --ink-light: #9a8e80;
+    }
 
-    <!-- Curseur gestuel -->
-    <div id="cursor">
-      <div id="cursor-ring"></div>
-      <div id="cursor-dot"></div>
-    </div>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    <!-- Layout principal -->
-    <div id="app">
-      <!-- COLONNE GAUCHE : Recette en cours -->
-      <aside id="panel-recipe">
-        <div class="panel-header">
-          <span class="kanji">抹茶</span>
-          <h1>Matcha Bar</h1>
-        </div>
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--wood);
+      color: var(--ink);
+      font-family: "DM Sans", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        <div id="recipe-selector">
-          <p class="label">dire le nom d'une recette</p>
-          <div class="recipe-chips"></div>
-        </div>
+    /* Grain bois identique à style.css */
+    .wood-grain-bg {
+      position: fixed;
+      inset: 0;
+      background-image:
+              repeating-linear-gradient(92deg, transparent, transparent 40px, rgba(180,160,130,0.06) 40px, rgba(180,160,130,0.06) 41px),
+              repeating-linear-gradient(180deg, transparent, transparent 80px, rgba(160,140,110,0.04) 80px, rgba(160,140,110,0.04) 81px);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-        <div id="recipe-steps">
-          <p class="label">étapes</p>
-          <ol id="steps-list"></ol>
-        </div>
+    /* ── Layout central ── */
+    .landing {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 80px;
+      width: 100%;
+      max-width: 960px;
+      padding: 0 40px;
+    }
 
-        <!-- Mic status -->
-        <div id="mic-status">
-          <div class="mic-status-content">
-            <div class="mic-icon">
-              <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
-                <rect
-                  x="4"
-                  y="0"
-                  width="6"
-                  height="9"
-                  rx="3"
-                  fill="currentColor"
-                />
-                <path
-                  d="M1 8a6 6 0 0 0 12 0"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  fill="none"
-                  stroke-linecap="round"
-                />
-                <line
-                  x1="7"
-                  y1="14"
-                  x2="7"
-                  y2="16"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </div>
-            <span id="mic-label">en écoute…</span>
-          </div>
-          <button
-            id="mic-reset"
-            title="Redémarrer la reconnaissance vocale"
-            style="
-              margin-left: 12px;
-              padding: 4px 8px;
-              font-size: 12px;
-              background: #7ab060;
-              color: white;
-              border: none;
-              border-radius: 4px;
-              cursor: pointer;
-              font-weight: 600;
-            "
-          >
-            ↻
-          </button>
-        </div>
-      </aside>
+    /* ── Colonne gauche : texte ── */
+    .landing-text {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 360px;
+    }
 
-      <!-- ZONE CENTRALE : Plan de travail -->
-      <main id="workspace">
-        <!-- Grain texture overlay -->
-        <div class="wood-grain"></div>
+    .landing-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-        <!-- Label plan de travail -->
-        <div id="workspace-label">plan de travail</div>
+    .eyebrow-kanji {
+      font-family: "Shippori Mincho", serif;
+      font-size: 22px;
+      color: var(--matcha);
+      line-height: 1;
+    }
 
-        <!-- Croix d'erreur -->
-        <div id="error-cross" class="hidden"></div>
+    .eyebrow-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+    }
 
-        <!-- BOL central -->
-        <div id="bowl-container">
-          <div id="bowl">
-            <div id="bowl-chocolate-layer"></div>
-            <div id="bowl-flour-layer"></div>
-            <div id="bowl-egg-layer"></div>
-            <div id="bowl-sugar-layer"></div>
-            <div id="bowl-butter-layer"></div>
+    .landing-title {
+      font-family: "Shippori Mincho", serif;
+      font-size: 52px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
 
-            <div id="bowl-matcha-layer"></div>
-            <div id="bowl-water-layer"></div>
-            <div id="bowl-ice-layer"></div>
+    .landing-title em {
+      font-style: normal;
+      color: var(--matcha);
+    }
 
-          </div>
-          <div id="bowl-label">bol de préparation</div>
+    .landing-subtitle {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--ink-mid);
+      line-height: 1.7;
+      max-width: 300px;
+    }
 
-          <!-- Zone de fouettage (autour du bol) -->
-          <div id="whisk-zone">
-            <svg
-              id="whisk-path-svg"
-              width="120"
-              height="40"
-              viewBox="0 0 120 40"
-            >
-              <path
-                d="M5 5 L25 35 L45 5 L65 35 L85 5 L105 35 L115 20"
-                fill="none"
-                stroke="#C8B89A"
-                stroke-width="1.5"
-                stroke-dasharray="5 4"
-                stroke-linecap="round"
-              />
-              <!-- Points du tracé -->
-              <circle
-                cx="5"
-                cy="5"
-                r="3"
-                fill="#8A7A5A"
-                opacity="0.4"
-                class="whisk-dot"
-              />
-              <circle
-                cx="25"
-                cy="35"
-                r="3"
-                fill="#8A7A5A"
-                opacity="0.4"
-                class="whisk-dot"
-              />
-              <circle
-                cx="45"
-                cy="5"
-                r="3"
-                fill="#8A7A5A"
-                opacity="0.4"
-                class="whisk-dot"
-              />
-              <circle
-                cx="65"
-                cy="35"
-                r="3"
-                fill="#8A7A5A"
-                opacity="0.4"
-                class="whisk-dot"
-              />
-              <circle
-                cx="85"
-                cy="5"
-                r="3"
-                fill="#8A7A5A"
-                opacity="0.4"
-                class="whisk-dot"
-              />
-              <circle
-                cx="105"
-                cy="35"
-                r="3"
-                fill="#8A7A5A"
-                opacity="0.4"
-                class="whisk-dot"
-              />
-            </svg>
-            <div id="whisk-gauge-wrap">
-              <div id="whisk-gauge-bar">
-                <div id="whisk-gauge-fill" style="width: 0%"></div>
-              </div>
-              <span id="whisk-gauge-label">0%</span>
-            </div>
-          </div>
-        </div>
-        <!-- VERRE -->
-        <div id="glass-container">
-          <div id="glass">
-            <div id="glass-liquid"></div>
-            <div id="glass-ice"></div>
-          </div>
-          <div id="glass-label">verre</div>
-        </div>
-        <!-- FOUR -->
-        <div id="oven-container">
-          <div id="oven">
-            <!-- Corps du four -->
-            <div class="oven-body">
-              <!-- Vitre -->
-              <div class="oven-window">
-                <div class="oven-heat"></div>
-              </div>
-              <!-- Boutons de commande -->
-              <div class="oven-knobs">
-                <div class="oven-knob"></div>
-                <div class="oven-knob"></div>
-                <div class="oven-knob"></div>
-              </div>
-            </div>
-          </div>
-          <div id="oven-label">four</div>
-        </div>
-        <!-- PLANCHE -->
-        <div id="cutting-board-container">
-          <div id="cutting-board">
-            <!-- Rainures déco de la planche -->
-            <div class="board-grain"></div>
-            <div class="board-grain"></div>
-            <div class="board-grain"></div>
-            <!-- Le chocolat en rectangle, caché par défaut -->
-            <div id="chocolate-block">
-              <div class="choc-grid">
-              </div>
-            </div>
+    /* ── Indicateur mic ── */
+    .mic-hint {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+      padding: 12px 16px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: fit-content;
+    }
 
-            <div id="chocolate-pieces" class="hidden"></div>
-          </div>
-          <div id="cutting-board-label">planche à découper</div>
-        </div>
-      </main>
+    .mic-hint-icon {
+      color: var(--matcha);
+      display: flex;
+      align-items: center;
+      animation: pulse-mic 2s ease-in-out infinite;
+    }
 
-      <!-- COLONNE DROITE : Ingrédients -->
-      <aside id="panel-ingredients">
-        <p class="label">ingrédients</p>
+    @keyframes pulse-mic {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.1); }
+    }
 
-        <div id="ingredients-grid"></div>
+    .mic-hint-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
 
-        <!-- Ghost d'ingrédient en cours de drag -->
-        <div id="drag-ghost" class="drag-ghost hidden">
-          <div class="drag-ghost-circle"></div>
-        </div>
-      </aside>
-    </div>
-    <!-- #app -->
+    .mic-hint-instruction {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+    }
 
-    <!-- Overlay de fin (confettis + message) -->
-    <div id="finish-overlay" class="hidden">
-      <div id="finish-card">
-        <div class="finish-emoji">
-          <svg width="48" height="48" viewBox="0 0 48 48">
-            <circle cx="24" cy="32" r="14" fill="#5C8A4A" />
-            <ellipse cx="24" cy="18" rx="10" ry="6" fill="#7AB060" />
-            <ellipse cx="24" cy="16" rx="7" ry="4" fill="#9EC87A" />
+    .mic-hint-word {
+      font-family: "Shippori Mincho", serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--matcha);
+      letter-spacing: 0.04em;
+    }
+
+    /* Onde animée sous le mot */
+    .mic-wave {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 14px;
+      margin-top: 4px;
+    }
+
+    .mic-wave span {
+      display: block;
+      width: 3px;
+      border-radius: 2px;
+      background: var(--matcha-mid);
+      animation: wave 1.2s ease-in-out infinite;
+    }
+
+    .mic-wave span:nth-child(1) { height: 4px;  animation-delay: 0s;    }
+    .mic-wave span:nth-child(2) { height: 10px; animation-delay: 0.1s;  }
+    .mic-wave span:nth-child(3) { height: 14px; animation-delay: 0.2s;  }
+    .mic-wave span:nth-child(4) { height: 8px;  animation-delay: 0.3s;  }
+    .mic-wave span:nth-child(5) { height: 12px; animation-delay: 0.15s; }
+    .mic-wave span:nth-child(6) { height: 5px;  animation-delay: 0.25s; }
+
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+      50%       { transform: scaleY(1);   opacity: 1;   }
+    }
+
+    /* ── Colonne droite : illustration plan de travail ── */
+    .landing-scene {
+      position: relative;
+      width: 300px;
+      height: 340px;
+      flex-shrink: 0;
+    }
+
+    /* Plan de travail miniature */
+    .scene-counter {
+      position: absolute;
+      inset: 0;
+      background: var(--wood);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .scene-counter-grain {
+      position: absolute;
+      inset: 0;
+      background-image:
+              repeating-linear-gradient(92deg, transparent, transparent 20px, rgba(180,160,130,0.08) 20px, rgba(180,160,130,0.08) 21px);
+    }
+
+    /* Label plan de travail */
+    .scene-label {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--wood-grain);
+      font-weight: 500;
+    }
+
+    /* ── Bol ── */
+    .scene-bowl {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 64px;
+      border-radius: 0 0 50px 50px;
+      background: #ddd6ca;
+      border: 2px solid #b8b0a4;
+      overflow: hidden;
+      box-shadow: inset 0 6px 12px rgba(0,0,0,0.08);
+    }
+
+    .scene-bowl::before {
+      content: "";
+      position: absolute;
+      top: -6px; left: -8px; right: -8px;
+      height: 12px;
+      background: #c8c0b4;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .scene-bowl-fill {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 28px;
+      background: #6a9c45;
+      border-radius: 0 0 48px 48px;
+    }
+
+    /* ── Planche ── */
+    .scene-board {
+      position: absolute;
+      bottom: 50px;
+      right: 24px;
+      width: 110px;
+      height: 76px;
+      background: #c8a96e;
+      border-radius: 8px;
+      border: 2px solid #a07840;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 3px 8px rgba(0,0,0,0.12);
+    }
+
+    .scene-board::after {
+      content: "";
+      position: absolute;
+      right: -14px; top: 50%;
+      transform: translateY(-50%);
+      width: 12px; height: 28px;
+      background: #b89050;
+      border-radius: 0 6px 6px 0;
+      border: 2px solid #a07840;
+      border-left: none;
+    }
+
+    .scene-board-grain {
+      position: absolute;
+      left: 8px; right: 8px;
+      height: 1px;
+      background: rgba(160,120,60,0.25);
+    }
+
+    .scene-board-grain:nth-child(1) { top: 20px; }
+    .scene-board-grain:nth-child(2) { top: 40px; }
+    .scene-board-grain:nth-child(3) { top: 58px; }
+
+    /* Petit chocolat sur la planche */
+    .scene-choc {
+      position: absolute;
+      top: 16px; left: 50%; transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: repeat(3, 12px);
+      grid-template-rows: repeat(2, 12px);
+      gap: 1px;
+      padding: 2px;
+      background: #e8d9a0;
+      border-radius: 3px;
+    }
+
+    .scene-choc-sq {
+      width: 12px; height: 12px;
+      background: #fdf3c0;
+      border-radius: 1px;
+      border: 1px solid #c9a84c;
+    }
+
+    /* ── Verre ── */
+    .scene-glass {
+      position: absolute;
+      top: 90px;
+      right: 28px;
+      width: 36px;
+      height: 70px;
+      background: rgba(255,255,255,0.06);
+      border: 2px solid rgba(170,160,145,0.55);
+      border-top: none;
+      border-radius: 2px 2px 6px 6px;
+      overflow: hidden;
+    }
+
+    .scene-glass::before {
+      content: "";
+      position: absolute;
+      top: -5px; left: -2px; right: -2px;
+      height: 5px;
+      background: rgba(170,160,145,0.6);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .scene-glass-liquid {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40px;
+      background: linear-gradient(180deg, #7ab060, #5c8a4a);
+      border-radius: 0 0 4px 4px;
+    }
+
+    /* ── Four ── */
+    .scene-oven {
+      position: absolute;
+      top: 55px;
+      left: 20px;
+      width: 72px;
+    }
+
+    .scene-oven-body {
+      width: 72px;
+      height: 64px;
+      background: #d4c8b8;
+      border-radius: 5px 5px 0 0;
+      border: 2px solid #a89880;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scene-oven-window {
+      position: absolute;
+      top: 6px; left: 6px; right: 6px; bottom: 14px;
+      border-radius: 3px;
+      background: #2e2418;
+      border: 1.5px solid #7a6850;
+    }
+
+    .scene-oven-knobs {
+      position: absolute;
+      bottom: 4px; left: 0; right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .scene-oven-knob {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #8a7860;
+      border: 1px solid #6a5840;
+    }
+
+    .scene-oven-handle {
+      width: 46px;
+      height: 7px;
+      background: #a89880;
+      border: 1.5px solid #8a7860;
+      border-top: none;
+      margin: 0 auto;
+    }
+
+    .scene-oven-feet {
+      width: 72px;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 10px;
+    }
+
+    .scene-oven-foot {
+      width: 10px; height: 5px;
+      background: #8a7860;
+      border-radius: 0 0 3px 3px;
+      border: 1px solid #6a5840;
+      border-top: none;
+    }
+
+    /* ── Petits éléments flottants décoratifs ── */
+    .deco-dot {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--matcha-pale);
+      opacity: 0.5;
+    }
+
+    /* ── Séparateur vertical ── */
+    .landing-divider {
+      width: 1px;
+      height: 200px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ── Transition vers l'app ── */
+    #landing-page {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    #landing-page.exit {
+      opacity: 0;
+      transform: scale(1.02);
+      pointer-events: none;
+    }
+
+    /* Badges recettes */
+    .recipe-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .recipe-badge {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 11px;
+      color: var(--ink-light);
+      font-weight: 400;
+    }
+
+    /* Footer discret */
+    .landing-footer {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--wood-grain);
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wood-grain-bg"></div>
+
+<div id="landing-page">
+  <div class="landing">
+
+    <!-- TEXTE -->
+    <div class="landing-text">
+
+      <div class="landing-eyebrow">
+        <span class="eyebrow-kanji">抹茶</span>
+        <span class="eyebrow-label">Matcha Bar</span>
+      </div>
+
+      <h1 class="landing-title">
+        Cuisinez<br>avec vos<br><em>mains.</em>
+      </h1>
+
+      <p class="landing-subtitle">
+        Une expérience de cuisine gestuelle et vocale. Suivez les recettes, versez, fouettez, découpez — sans toucher à rien.
+      </p>
+
+      <div class="recipe-badges">
+        <span class="recipe-badge">Matcha latte froid</span>
+        <span class="recipe-badge">Matcha latte chaud</span>
+        <span class="recipe-badge">Cookie matcha</span>
+        <span class="recipe-badge">Gâteau chocolat</span>
+      </div>
+
+      <div class="mic-hint">
+        <div class="mic-hint-icon">
+          <svg width="16" height="18" viewBox="0 0 14 16" fill="none">
+            <rect x="4" y="0" width="6" height="9" rx="3" fill="currentColor"/>
+            <path d="M1 8a6 6 0 0 0 12 0" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <line x1="7" y1="14" x2="7" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
         </div>
-        <h2>Parfait !</h2>
-        <p>Votre iced matcha latte est prêt.</p>
-        <div
-          id="finish-mic-label"
-          style="
-            font-size: 14px;
-            color: #5c8a4a;
-            margin: 16px 0;
-            min-height: 20px;
-          "
-        >
-          Dites 'nouvelle recette'
+        <div class="mic-hint-text">
+          <span class="mic-hint-instruction">Dites le mot magique</span>
+          <span class="mic-hint-word">« Japon »</span>
+          <div class="mic-wave">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
         </div>
-        <button id="finish-reset">Nouvelle recette</button>
       </div>
-      <canvas id="confetti-canvas"></canvas>
+
     </div>
 
-    <!-- Scripts MediaPipe (fournis par le prof) -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="hand-tracking.js"></script>
+    <!-- DIVIDER -->
+    <div class="landing-divider"></div>
 
-    <!-- Nos modules -->
-    <script type="module" src="script.js"></script>
-  </body>
+    <!-- SCÈNE ILLUSTRATIVE -->
+    <div class="landing-scene">
+      <div class="scene-counter">
+        <div class="scene-counter-grain"></div>
+        <div class="scene-label">plan de travail</div>
+
+        <!-- Bol -->
+        <div class="scene-bowl">
+          <div class="scene-bowl-fill"></div>
+        </div>
+
+        <!-- Verre -->
+        <div class="scene-glass">
+          <div class="scene-glass-liquid"></div>
+        </div>
+
+        <!-- Four -->
+        <div class="scene-oven">
+          <div class="scene-oven-body">
+            <div class="scene-oven-window"></div>
+            <div class="scene-oven-knobs">
+              <div class="scene-oven-knob"></div>
+              <div class="scene-oven-knob"></div>
+              <div class="scene-oven-knob"></div>
+            </div>
+          </div>
+          <div class="scene-oven-handle"></div>
+          <div class="scene-oven-feet">
+            <div class="scene-oven-foot"></div>
+            <div class="scene-oven-foot"></div>
+          </div>
+        </div>
+
+        <!-- Planche -->
+        <div class="scene-board">
+          <div class="scene-board-grain"></div>
+          <div class="scene-board-grain"></div>
+          <div class="scene-board-grain"></div>
+          <div class="scene-choc">
+            <div class="scene-choc-sq"></div>
+            <div class="scene-choc-sq"></div>
+            <div class="scene-choc-sq"></div>
+            <div class="scene-choc-sq"></div>
+            <div class="scene-choc-sq"></div>
+            <div class="scene-choc-sq"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="landing-footer">Contrôle gestuel + vocal &nbsp;·&nbsp; MediaPipe Hands</div>
+
+<script type="module" src="navigate.js"></script>
+</body>
 </html>
