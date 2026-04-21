@@ -5,6 +5,8 @@ const ghostCircle = ghost.querySelector(".drag-ghost-circle");
 const bowl = document.getElementById("bowl");
 const bowlMatchaLayer = document.getElementById("bowl-matcha-layer");
 const bowlWaterLayer = document.getElementById("bowl-water-layer");
+const bowlIceLayer = document.getElementById("bowl-ice-layer");
+const glassIce = document.getElementById("glass-ice");
 
 let draggedItem = null; // élément .ingredient en cours de drag
 let bowlGrabbed = false; // le bol est-il attrapé au pinch?
@@ -19,13 +21,15 @@ let allowBowlGrab = false; // le grab du bol est-il autorisé à cette étape?
 let matchaHeight = 0; // hauteur du matcha
 let waterHeight = 0; // hauteur de l'eau
 let totalHeight = 0; // 0..100
+let lastIngredient = null; // dernier ingrédient ajouté (autres que matcha/water)
+let iceCubesAdded = 0; // nombre de fois qu'on a ajouté des glaçons
 
 // ── Couleurs du bol selon ingrédient ajouté ──────────────
 const LIQUID_COLORS = {
   matcha: "#4A7C35",
   water: "#6A9C45",
   ice: "#5A8C50",
-  milk: "#7AB870",
+  milk: "#98c690",
 };
 
 // ── API publique ─────────────────────────────────────────
@@ -74,8 +78,13 @@ export function resetDrop() {
   matchaHeight = 0;
   waterHeight = 0;
   totalHeight = 0;
+  lastIngredient = null;
+  iceCubesAdded = 0;
   bowlMatchaLayer.style.height = "0px";
+  bowlMatchaLayer.style.background = LIQUID_COLORS.matcha;
   bowlWaterLayer.style.height = "0px";
+  bowlIceLayer.style.height = "0px";
+  bowlIceLayer.innerHTML = "";
 }
 
 // ── Boucle principale appelée par onHandUpdate ───────────
@@ -239,20 +248,59 @@ function dropOnBowl(el) {
 
 function updateBowl(id) {
   const maxH = 78; // hauteur max du bol
-
+  const iceHeight = 22;
   if (id === "matcha") {
     // Ajouter du matcha : remplit la couche de matcha
     matchaHeight = Math.min(maxH, matchaHeight + 12);
     bowlMatchaLayer.style.height = matchaHeight + "px";
+    bowlMatchaLayer.style.background = LIQUID_COLORS.matcha;
   } else if (id === "water") {
     // Ajouter de l'eau : remplit la couche d'eau au-dessus du matcha
     waterHeight = Math.min(maxH - matchaHeight, waterHeight + 12);
     bowlWaterLayer.style.height = waterHeight + "px";
     bowlWaterLayer.style.bottom = matchaHeight + "px";
+  } else if (id === "ice") {
+    // Ajouter des glaçons : remplir la couche de glace et créer les cubes
+
+    matchaHeight = Math.min(maxH, matchaHeight + iceHeight);
+    bowlMatchaLayer.style.height = matchaHeight + "px";
+    bowlIceLayer.style.bottom = matchaHeight - iceHeight + "px";
+    bowlIceLayer.style.background = LIQUID_COLORS.ice;
+
+    // Créer 3 cubes de glaçons dans le bol
+    bowlIceLayer.innerHTML = "";
+    for (let i = 0; i < 3; i++) {
+      const cube = document.createElement("div");
+      cube.className = "ice-cube";
+      bowlIceLayer.appendChild(cube);
+    }
+
+    // Créer les mêmes 3 cubes de glaçons dans le verre
+    glassIce.innerHTML = "";
+    for (let i = 0; i < 3; i++) {
+      const cube = document.createElement("div");
+      cube.className = "ice-cube";
+      glassIce.appendChild(cube);
+    }
+
+    lastIngredient = id;
+  } else if (id === "milk") {
+    const milkHeight = 22;
+    matchaHeight = Math.min(maxH, matchaHeight + milkHeight);
+    bowlMatchaLayer.style.height = matchaHeight + "px";
+    bowlMatchaLayer.style.background = LIQUID_COLORS.milk;
+    bowlIceLayer.style.marginBottom = matchaHeight - iceHeight + "px";
   } else {
-    // Autres ingrédients (glaçons, lait)
+    // Autres ingrédients (lait, etc.)
+    lastIngredient = id;
     totalHeight = Math.min(maxH, totalHeight + 22);
     bowlMatchaLayer.style.height = totalHeight + "px";
+
+    // Changer la couleur selon l'ingrédient
+    const color = LIQUID_COLORS[id];
+    if (color) {
+      bowlMatchaLayer.style.background = color;
+    }
   }
 }
 

@@ -45,14 +45,51 @@
           <div class="mic-status-content">
             <div class="mic-icon">
               <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
-                <rect x="4" y="0" width="6" height="9" rx="3" fill="currentColor" />
-                <path d="M1 8a6 6 0 0 0 12 0" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" />
-                <line x1="7" y1="14" x2="7" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                <rect
+                  x="4"
+                  y="0"
+                  width="6"
+                  height="9"
+                  rx="3"
+                  fill="currentColor"
+                />
+                <path
+                  d="M1 8a6 6 0 0 0 12 0"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  fill="none"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="7"
+                  y1="14"
+                  x2="7"
+                  y2="16"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
               </svg>
             </div>
             <span id="mic-label">en écoute…</span>
           </div>
-          <button id="mic-reset" title="Redémarrer la reconnaissance vocale" style="margin-left: 12px; padding: 4px 8px; font-size: 12px; background: #7AB060; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">↻</button>
+          <button
+            id="mic-reset"
+            title="Redémarrer la reconnaissance vocale"
+            style="
+              margin-left: 12px;
+              padding: 4px 8px;
+              font-size: 12px;
+              background: #7ab060;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-weight: 600;
+            "
+          >
+            ↻
+          </button>
         </div>
       </aside>
 
@@ -72,6 +109,7 @@
           <div id="bowl">
             <div id="bowl-matcha-layer"></div>
             <div id="bowl-water-layer"></div>
+            <div id="bowl-ice-layer"></div>
           </div>
           <div id="bowl-label">bol de préparation</div>
 
@@ -153,6 +191,7 @@
         <div id="glass-container">
           <div id="glass">
             <div id="glass-liquid"></div>
+            <div id="glass-ice"></div>
           </div>
           <div id="glass-label">verre</div>
         </div>
@@ -212,7 +251,17 @@
         </div>
         <h2>Parfait !</h2>
         <p>Votre iced matcha latte est prêt.</p>
-        <div id="finish-mic-label" style="font-size: 14px; color: #5C8A4A; margin: 16px 0; min-height: 20px;">Dites 'nouvelle recette'</div>
+        <div
+          id="finish-mic-label"
+          style="
+            font-size: 14px;
+            color: #5c8a4a;
+            margin: 16px 0;
+            min-height: 20px;
+          "
+        >
+          Dites 'nouvelle recette'
+        </div>
         <button id="finish-reset">Nouvelle recette</button>
       </div>
       <canvas id="confetti-canvas"></canvas>

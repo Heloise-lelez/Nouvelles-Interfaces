@@ -5,8 +5,10 @@ import { isBowlGrabbed, getBowlOffset } from "./drag.js";
 const bowl = document.getElementById("bowl");
 const glass = document.getElementById("glass");
 const glassLiquid = document.getElementById("glass-liquid");
+const glassIce = document.getElementById("glass-ice");
 const bowlMatchaLayer = document.getElementById("bowl-matcha-layer");
 const bowlWaterLayer = document.getElementById("bowl-water-layer");
+const bowlIceLayer = document.getElementById("bowl-ice-layer");
 
 let isActive = false;
 let tiltAngle = 0; // angle de basculement détecté
@@ -50,6 +52,8 @@ export function resetPour() {
   autoPourStarted = false;
   glass.classList.remove("pour-ready");
   glassLiquid.style.height = "0px";
+  glassIce.style.height = "0px";
+  glassIce.style.bottom = "0px";
 }
 
 // Appelée à chaque frame depuis script.js
@@ -175,14 +179,32 @@ function isOverGlass(hand) {
 }
 
 function animatePour(progress) {
+  // Afficher les glaçons quand le versement commence
+  if (progress > 0) {
+    glassIce.style.opacity = "1";
+  }
+
   // Vider le bol progressivement
   const emptyHeight = (startHeight * (100 - progress)) / 100;
   bowlMatchaLayer.style.height = emptyHeight + "px";
   bowlWaterLayer.style.height = emptyHeight * 0.3 + "px"; // garder ratio
+  bowlIceLayer.style.marginBottom = emptyHeight * 0.2 + "px"; // garder ratio
+  if (emptyHeight < 5) {
+    bowlIceLayer.style.opacity = 0;
+  }
 
   // Remplir le verre
-  const glassHeight = (60 * progress) / 100; // 60px = hauteur max du verre
+  const glassHeight = (100 * progress) / 100; // 100px = hauteur max du verre
   glassLiquid.style.height = glassHeight + "px";
+
+  // Positionner les glaçons au-dessus du liquide
+  const iceHeight = 15; // hauteur des glaçons
+  if (glassHeight > 0) {
+    glassIce.style.height = Math.min(iceHeight, glassHeight + iceHeight) + "px";
+    glassIce.style.bottom = glassHeight + "px";
+  } else {
+    glassIce.style.height = "0px";
+  }
 }
 
 function finishPour() {

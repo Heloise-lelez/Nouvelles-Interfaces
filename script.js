@@ -44,6 +44,12 @@ if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
 setWhiskActive(false); // désactive la détection du fouettage au démarrage
 setCurrentStepId(null); // initialise l'étape courante pour le versement
 
+// ── Écouter la fin du versement (une seule fois) ─────────
+onPourComplete(() => {
+  completeStep(stepIdx);
+  setTimeout(showFinish, 700);
+});
+
 window.onHandUpdate((hand) => {
   const x = (1 - hand.x) * window.innerWidth; // Flip X to match mirrored camera
   const y = hand.y * window.innerHeight;
@@ -57,12 +63,6 @@ window.onHandUpdate((hand) => {
   processDrag({ ...hand, x: 1 - hand.x, y: hand.y });
   processWhisk(hand);
   processPour(hand, hand.landmarks);
-
-  // Écouter la fin du versement :
-  onPourComplete(() => {
-    completeStep(stepIdx);
-    setTimeout(showFinish, 700);
-  });
 
   // Modules (passer les coordonnées transformées)
   processDrag({ ...hand, x: 1 - hand.x, y: hand.y });
@@ -228,13 +228,20 @@ function playErrorSound() {
 function resetRecipe() {
   console.log("Resetting recipe state...");
   const bowl = document.getElementById("bowl");
+  const glassIce = document.getElementById("glass-ice");
 
   // Vider tous les layers du bol
   if (bowl) {
     const layers = bowl.querySelectorAll("[id$='-layer']");
     layers.forEach((layer) => {
       layer.style.height = "0";
+      layer.innerHTML = ""; // Vider aussi le contenu (glaçons)
     });
+  }
+
+  // Vider les glaçons du verre
+  if (glassIce) {
+    glassIce.innerHTML = "";
   }
 
   // Réinitialiser les étapes
@@ -264,26 +271,6 @@ function resetRecipe() {
   // Réinitialiser le drag
   resetDrop();
 }
-
-// Dans la boucle onHandUpdate :
-window.onHandUpdate((hand) => {
-  const x = (1 - hand.x) * window.innerWidth;
-  const y = hand.y * window.innerHeight;
-
-  cursor.style.left = x + "px";
-  cursor.style.top = y + "px";
-  cursor.classList.toggle("pinching", hand.isPinching);
-
-  processDrag({ ...hand, x: 1 - hand.x, y: hand.y });
-  processWhisk(hand);
-  processPour(hand, hand.landmarks); // ← ajouter
-});
-
-// Écouter la fin du versement :
-onPourComplete(() => {
-  completeStep(stepIdx);
-  setTimeout(showFinish, 700);
-});
 
 // ── Confettis canvas ─────────────────────────────────────
 function launchConfetti() {
